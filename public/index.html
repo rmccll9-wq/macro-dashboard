@@ -7,14 +7,29 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
-:root {
+:root, [data-theme="dark"] {
   --bg: #0a0c0f; --surface: #111318; --surface2: #161922; --border: #1e2129; --border-lit: #2d3140;
   --text: #c8cdd6; --muted: #505666; --accent: #00d4aa; --accent2: #00b4d8; --warn: #f5a623;
   --danger: #e05c5c; --ok: #4caf7d; --label: #6b7280; --purple: #a78bfa;
 }
+[data-theme="light"] {
+  --bg: #f0f2f5; --surface: #ffffff; --surface2: #f8f9fb; --border: #dde0e6; --border-lit: #c8cdd6;
+  --text: #1a1d24; --muted: #6b7280; --accent: #059669; --accent2: #0284c7; --warn: #d97706;
+  --danger: #dc2626; --ok: #16a34a; --label: #4b5563; --purple: #7c3aed;
+}
+[data-theme="deepblue"] {
+  --bg: #080c18; --surface: #0c1228; --surface2: #101836; --border: #1a2444; --border-lit: #243060;
+  --text: #b8c4e0; --muted: #4a5888; --accent: #3b82f6; --accent2: #60a5fa; --warn: #f59e0b;
+  --danger: #ef4444; --ok: #22c55e; --label: #5b6a94; --purple: #818cf8;
+}
+[data-theme="crimson"] {
+  --bg: #120a0a; --surface: #1a1010; --surface2: #221414; --border: #2e1a1a; --border-lit: #442828;
+  --text: #e0c4c4; --muted: #6b4a4a; --accent: #ef4444; --accent2: #f87171; --warn: #f59e0b;
+  --danger: #ff6b6b; --ok: #4ade80; --label: #7a5555; --purple: #c084fc;
+}
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { background: var(--bg); color: var(--text); font-family: 'IBM Plex Mono', monospace; font-size: 13px; min-height: 100vh; }
-body::before { content:''; position:fixed; inset:0; background-image: linear-gradient(rgba(0,212,170,0.02) 1px,transparent 1px), linear-gradient(90deg,rgba(0,212,170,0.02) 1px,transparent 1px); background-size:40px 40px; pointer-events:none; z-index:0; }
+body::before { content:''; position:fixed; inset:0; background-image: linear-gradient(color-mix(in srgb, var(--accent) 3%, transparent) 1px,transparent 1px), linear-gradient(90deg,color-mix(in srgb, var(--accent) 3%, transparent) 1px,transparent 1px); background-size:40px 40px; pointer-events:none; z-index:0; }
 
 /* Layout */
 .shell { display:flex; min-height:100vh; position:relative; z-index:1; }
@@ -300,6 +315,13 @@ footer { margin-top:32px; padding:16px 0; border-top:1px solid var(--border); fo
     <div class="nav-item" onclick="showPage('news')"><span class="icon">▤</span> News Feed</div>
     <div class="nav-section">Settings</div>
     <div class="nav-item" onclick="showPage('settings')"><span class="icon">⚙</span> Thresholds</div>
+    <div class="nav-section">Theme</div>
+    <div class="theme-switcher" style="padding:6px 20px;display:flex;gap:6px;flex-wrap:wrap">
+      <div class="theme-dot" onclick="setTheme('dark')" title="Dark" style="width:22px;height:22px;border-radius:50%;background:#0a0c0f;border:2px solid #2d3140;cursor:pointer" id="theme-dark"></div>
+      <div class="theme-dot" onclick="setTheme('light')" title="Light" style="width:22px;height:22px;border-radius:50%;background:#f0f2f5;border:2px solid #c8cdd6;cursor:pointer" id="theme-light"></div>
+      <div class="theme-dot" onclick="setTheme('deepblue')" title="Deep Blue" style="width:22px;height:22px;border-radius:50%;background:#0c1228;border:2px solid #243060;cursor:pointer" id="theme-deepblue"></div>
+      <div class="theme-dot" onclick="setTheme('crimson')" title="Crimson" style="width:22px;height:22px;border-radius:50%;background:#1a1010;border:2px solid #442828;cursor:pointer" id="theme-crimson"></div>
+    </div>
   </nav>
 
   <!-- Main Content -->
@@ -1232,6 +1254,19 @@ loadTradingViewWidgets();
 loadCAPE();
 
 /* ═══════════ INIT ═══════════ */
+// Theme
+function setTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  setCookie('theme', theme, 365);
+  // Update active dot
+  document.querySelectorAll('.theme-dot').forEach(d => d.style.outline = 'none');
+  const active = document.getElementById('theme-' + theme);
+  if (active) active.style.outline = '2px solid var(--accent)';
+  // Update TradingView widgets for theme (they need to be recreated)
+  // Skip for performance — they'll pick up on next page load
+}
+const savedTheme = getCookie('theme') || 'dark';
+setTheme(savedTheme);
 // Cookie helpers
 function setCookie(k,v,days=90){document.cookie=k+'='+encodeURIComponent(v)+';max-age='+(days*86400)+';path=/;SameSite=Lax';}
 function getCookie(k){const m=document.cookie.match(new RegExp('(?:^|; )'+k+'=([^;]*)'));return m?decodeURIComponent(m[1]):null;}
