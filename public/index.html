@@ -181,6 +181,31 @@ body::before { content:''; position:fixed; inset:0; background-image: linear-gra
 /* Macro extended cards */
 .macro-cat-title { font-size:11px; color:var(--accent); letter-spacing:0.12em; text-transform:uppercase; margin:20px 0 8px; }
 
+/* Sentiment */
+.sent-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
+.sent-card { background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:14px 16px; transition:border-color 0.15s; cursor:pointer; }
+.sent-card:hover { border-color:var(--accent); }
+.sent-card .ticker { font-size:16px; font-weight:600; color:#e8ecf2; }
+.sent-card .name { font-size:10px; color:var(--muted); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.sent-bar { display:flex; height:6px; border-radius:3px; overflow:hidden; margin-top:10px; background:var(--border-lit); }
+.sent-bar .bull { background:var(--ok); transition:width 0.6s ease; }
+.sent-bar .bear { background:var(--danger); transition:width 0.6s ease; }
+.sent-pct { display:flex; justify-content:space-between; margin-top:4px; font-size:10px; }
+.sent-pct .bull-pct { color:var(--ok); }
+.sent-pct .bear-pct { color:var(--danger); }
+.sent-detail { background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:18px; margin-top:16px; }
+.sent-msg { padding:10px 0; border-bottom:1px solid var(--border); font-size:12px; line-height:1.5; }
+.sent-msg:last-child { border-bottom:none; }
+.sent-msg .msg-body { color:var(--text); }
+.sent-msg .msg-meta { font-size:10px; color:var(--muted); margin-top:4px; display:flex; gap:10px; }
+.sent-msg .msg-bull { color:var(--ok); font-weight:600; }
+.sent-msg .msg-bear { color:var(--danger); font-weight:600; }
+.sent-search { display:flex; gap:10px; margin-bottom:16px; }
+.sent-search input { flex:1; background:var(--bg); border:1px solid var(--border-lit); border-radius:4px; color:var(--text); font-family:'IBM Plex Mono',monospace; font-size:13px; padding:10px 14px; text-transform:uppercase; }
+.sent-search input:focus { outline:none; border-color:var(--accent); }
+.sent-search input::placeholder { color:var(--muted); text-transform:none; }
+@media(max-width:768px) { .sent-grid { grid-template-columns:1fr; } }
+
 /* Footer */
 footer { margin-top:32px; padding:16px 0; border-top:1px solid var(--border); font-size:10px; color:var(--muted); display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; }
 
@@ -214,6 +239,7 @@ footer { margin-top:32px; padding:16px 0; border-top:1px solid var(--border); fo
     <div class="nav-section">Intelligence</div>
     <div class="nav-item" onclick="showPage('ai')"><span class="icon">⬡</span> AI Analysis</div>
     <div class="nav-item" onclick="showPage('search')"><span class="icon">◎</span> Web Intel</div>
+    <div class="nav-item" onclick="showPage('sentiment')"><span class="icon">◈</span> Retail Sentiment</div>
     <div class="nav-section">Events</div>
     <div class="nav-item" onclick="showPage('calendar')"><span class="icon">▦</span> Fed / Data Cal</div>
     <div class="nav-item" onclick="showPage('news')"><span class="icon">▤</span> News Feed</div>
@@ -368,6 +394,19 @@ footer { margin-top:32px; padding:16px 0; border-top:1px solid var(--border); fo
       <div class="news-list" id="news-list"><div class="alert info"><span>◎</span><span>Loading news…</span></div></div>
     </div>
 
+    <!-- ============ PAGE: SENTIMENT ============ -->
+    <div class="page" id="page-sentiment">
+      <p style="color:var(--muted);margin-bottom:14px;font-size:12px">Retail sentiment from StockTwits. Search any ticker or browse trending. Claude evaluates trade ideas against macro data.</p>
+      <div class="sent-search">
+        <input type="text" id="sent-ticker" placeholder="Search ticker (e.g. NVDA, AAPL, TSLA)…" maxlength="10">
+        <button class="btn btn-primary" id="sent-search-btn" onclick="searchSentiment()">Lookup</button>
+        <button class="btn btn-outline" onclick="loadTrending()">↻ Trending</button>
+      </div>
+      <div id="sent-trending"></div>
+      <div id="sent-detail"></div>
+      <div id="sent-ai" style="margin-top:16px"></div>
+    </div>
+
     <!-- ============ PAGE: SETTINGS ============ -->
     <div class="page" id="page-settings">
       <div class="thresholds-panel">
@@ -416,11 +455,12 @@ function showPage(id) {
   // Highlight nav
   document.querySelectorAll('.nav-item').forEach(n => { if (n.textContent.trim().toLowerCase().includes(id === 'ai' ? 'ai analysis' : id === 'search' ? 'web intel' : id)) n.classList.add('active'); });
   document.querySelectorAll('.mob-item').forEach(n => { if (n.textContent.trim().toLowerCase().includes(id === 'dashboard' ? 'dash' : id === 'calendar' ? 'cal' : id === 'search' ? 'intel' : id)) n.classList.add('active'); });
-  const titles = { dashboard:'Dashboard', extended:'Extended Macro', ai:'AI Analysis', search:'Web Intelligence', calendar:'Fed / Data Calendar', news:'News Feed', settings:'Settings' };
+  const titles = { dashboard:'Dashboard', extended:'Extended Macro', ai:'AI Analysis', search:'Web Intelligence', sentiment:'Retail Sentiment', calendar:'Fed / Data Calendar', news:'News Feed', settings:'Settings' };
   document.getElementById('page-title').textContent = titles[id] || id;
   // Auto-load calendar/news on first visit
   if (id === 'calendar' && !document.querySelector('#cal-list .cal-item')) loadCalendar();
   if (id === 'news' && !document.querySelector('#news-list .news-item')) loadNews();
+  if (id === 'sentiment' && !document.querySelector('#sent-trending .sent-card')) loadTrending();
 }
 
 /* ═══════════ FRED FETCH ═══════════ */
@@ -728,6 +768,125 @@ function timeAgo(date) {
   return Math.floor(s/86400) + 'd ago';
 }
 
+/* ═══════════ RETAIL SENTIMENT ═══════════ */
+async function loadTrending() {
+  const container = document.getElementById('sent-trending');
+  container.innerHTML = '<div style="color:var(--muted);font-size:11px"><span class="spinner-sm"></span> Loading trending…</div>';
+  try {
+    const r = await fetch('/api/sentiment');
+    const d = await r.json();
+    if (d.error) throw new Error(d.error);
+    if (!d.trending || !d.trending.length) { container.innerHTML = '<div class="alert info"><span>◎</span><span>No trending data available.</span></div>'; return; }
+    container.innerHTML = '<div class="section-label">Trending on StockTwits <span class="src-tag">LIVE</span></div><div class="sent-grid">' +
+      d.trending.map(s => {
+        const bullPct = s.sentiment ? s.sentiment.bullPct : 50;
+        const bearPct = 100 - bullPct;
+        return `<div class="sent-card" onclick="searchSentiment('${s.symbol}')">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div><div class="ticker">${s.symbol}</div><div class="name">${s.title}</div></div>
+            ${s.sentiment ? `<span class="badge ${bullPct>=60?'up':bullPct<=40?'down':'flat'}">${bullPct}% bull</span>` : ''}
+          </div>
+          <div class="sent-bar"><div class="bull" style="width:${bullPct}%"></div><div class="bear" style="width:${bearPct}%"></div></div>
+          <div class="sent-pct"><span class="bull-pct">🟢 ${bullPct}%</span><span class="bear-pct">${bearPct}% 🔴</span></div>
+        </div>`;
+      }).join('') + '</div>';
+  } catch(e) {
+    container.innerHTML = `<div class="alert danger"><span>✗</span><span>${e.message}</span></div>`;
+  }
+}
+
+async function searchSentiment(ticker) {
+  const sym = ticker || document.getElementById('sent-ticker').value.trim().toUpperCase();
+  if (!sym) return;
+  document.getElementById('sent-ticker').value = sym;
+  const detail = document.getElementById('sent-detail');
+  const aiBox = document.getElementById('sent-ai');
+  detail.innerHTML = '<div style="color:var(--muted);font-size:11px"><span class="spinner-sm"></span> Loading sentiment for $' + sym + '…</div>';
+  aiBox.innerHTML = '';
+
+  try {
+    const r = await fetch(`/api/sentiment?symbol=${sym}`);
+    const d = await r.json();
+    if (d.error) throw new Error(d.error);
+
+    const s = d.sentiment;
+    detail.innerHTML = `
+      <div class="sent-detail">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <div>
+            <span style="font-size:20px;font-weight:600;color:#e8ecf2">$${d.symbol}</span>
+            <span style="font-size:12px;color:var(--muted);margin-left:8px">${d.title}</span>
+          </div>
+          <span class="badge ${s.bullPct>=60?'up':s.bullPct<=40?'down':'flat'}" style="font-size:12px;padding:4px 10px">
+            ${s.bullPct>=60?'🟢 BULLISH':s.bullPct<=40?'🔴 BEARISH':'⚪ MIXED'} · ${s.bullPct}/${s.bearPct}
+          </span>
+        </div>
+        <div class="sent-bar" style="height:10px;border-radius:5px"><div class="bull" style="width:${s.bullPct}%"></div><div class="bear" style="width:${s.bearPct}%"></div></div>
+        <div class="sent-pct" style="margin-top:6px;font-size:11px"><span class="bull-pct">🟢 Bullish: ${s.bullish} posts (${s.bullPct}%)</span><span class="bear-pct">Bearish: ${s.bearish} posts (${s.bearPct}%) 🔴</span></div>
+        <div style="margin-top:16px;font-size:10px;color:var(--accent);letter-spacing:0.12em;text-transform:uppercase">Recent Messages</div>
+        <div style="max-height:300px;overflow-y:auto">
+          ${d.messages.slice(0,12).map(m => `
+            <div class="sent-msg">
+              <div class="msg-body">${escHtml(m.body)}</div>
+              <div class="msg-meta">
+                <span class="${m.sentiment==='Bullish'?'msg-bull':''}${m.sentiment==='Bearish'?'msg-bear':''}">${m.sentiment==='Bullish'?'🟢 Bull':m.sentiment==='Bearish'?'🔴 Bear':'⚪ —'}</span>
+                <span>@${m.user}</span>
+                <span>${m.followers} followers</span>
+                ${m.likes?`<span>♥ ${m.likes}</span>`:''}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+        <button class="btn btn-outline" style="margin-top:14px;width:100%" onclick="aiSentiment('${d.symbol}',${s.bullPct},${s.bearPct})">⬡ Claude: Evaluate This Trade</button>
+      </div>`;
+  } catch(e) {
+    detail.innerHTML = `<div class="alert danger"><span>✗</span><span>${e.message}</span></div>`;
+  }
+}
+
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+async function aiSentiment(symbol, bullPct, bearPct) {
+  const aiBox = document.getElementById('sent-ai');
+  aiBox.innerHTML = `<div class="ai-panel"><div class="ai-header"><h3>⬡ Trade Evaluation: $${symbol}</h3><span style="font-size:10px;color:var(--muted)" id="sent-ai-status">Thinking…</span></div><div class="ai-body"><div class="ai-output" id="sent-ai-output"><span style="color:var(--muted)"><span class="spinner-sm"></span> Claude is evaluating $${symbol} against macro data…</span></div></div></div>`;
+
+  const macroCtx = live.ffr != null ? {
+    rates: { fedFunds: live.ffr, treasury2Y: live.y2, treasury10Y: live.y10, spread10Y2Y: live.spread },
+    inflation: { cpi: live.cpi, coreCPI: live.core, pce: live.pce }
+  } : {};
+
+  const question = `Retail traders on StockTwits are currently ${bullPct}% bullish and ${bearPct}% bearish on $${symbol}.
+
+Evaluate this as a trade idea:
+1. What's the bull case and bear case for $${symbol} right now?
+2. Is retail sentiment a useful signal here or a contrarian indicator?
+3. Given the current macro environment (data below), does this trade make sense?
+4. What's the risk/reward setup? What would invalidate the thesis?
+5. Give a clear verdict: interesting trade, avoid, or needs more context.
+
+Be direct and specific. This is for research only, not financial advice.`;
+
+  try {
+    const r = await fetch('/api/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ macroData: macroCtx, question })
+    });
+    const d = await r.json();
+    if (d.error) throw new Error(d.error);
+    document.getElementById('sent-ai-output').textContent = d.analysis;
+    document.getElementById('sent-ai-status').textContent = 'Complete';
+  } catch(e) {
+    document.getElementById('sent-ai-output').innerHTML = `<span style="color:var(--danger)">Error: ${e.message}</span>`;
+    document.getElementById('sent-ai-status').textContent = 'Error';
+  }
+}
+
+// Load trending when sentiment page is shown
+// (handled in showPage)
+
 /* ═══════════ MARKET PULSE ═══════════ */
 function loadTradingViewWidgets() {
   const symbols = [
@@ -813,6 +972,7 @@ loadCAPE();
 document.getElementById('api-key').addEventListener('keydown', e => { if(e.key==='Enter') fetchAll(); });
 document.getElementById('ai-question').addEventListener('keydown', e => { if(e.key==='Enter' && !e.shiftKey) { e.preventDefault(); runAI(); }});
 document.getElementById('search-query').addEventListener('keydown', e => { if(e.key==='Enter' && !e.shiftKey) { e.preventDefault(); runSearch(); }});
+document.getElementById('sent-ticker').addEventListener('keydown', e => { if(e.key==='Enter') searchSentiment(); });
 </script>
 </body>
 </html>

@@ -7,6 +7,7 @@
     { "source": "/api/news", "destination": "/api/news" },
     { "source": "/api/calendar", "destination": "/api/calendar" },
     { "source": "/api/macro", "destination": "/api/macro" },
-    { "source": "/api/cape", "destination": "/api/cape" }
+    { "source": "/api/cape", "destination": "/api/cape" },
+    { "source": "/api/sentiment", "destination": "/api/sentiment" }
   ]
 }
