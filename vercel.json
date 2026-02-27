@@ -6,6 +6,7 @@
     { "source": "/api/search", "destination": "/api/search" },
     { "source": "/api/news", "destination": "/api/news" },
     { "source": "/api/calendar", "destination": "/api/calendar" },
-    { "source": "/api/macro", "destination": "/api/macro" }
+    { "source": "/api/macro", "destination": "/api/macro" },
+    { "source": "/api/cape", "destination": "/api/cape" }
   ]
 }

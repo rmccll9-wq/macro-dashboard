@@ -789,32 +789,25 @@ async function loadVIX() {
 }
 
 async function loadCAPE() {
-  const apiKey = document.getElementById('api-key').value.trim();
-  if (!apiKey) return;
   try {
-    // Shiller PE from Multpl via our proxy, or fallback to manual
-    const obs = await fredFetch('CAPE10', apiKey, 2).catch(() => null);
-    if (obs && obs.length) {
-      const val = +obs[0].value;
+    const r = await fetch('/api/cape');
+    const d = await r.json();
+    if (d.value) {
+      const val = d.value;
       document.getElementById('cape-val').textContent = val.toFixed(1);
       const zone = val < 15 ? ['low','CHEAP · Below avg'] : val < 20 ? ['low','FAIR VALUE'] : val < 25 ? ['mid','ABOVE AVG'] : val < 30 ? ['mid','ELEVATED'] : val < 35 ? ['high','EXPENSIVE'] : ['extreme','EXTREME · 95th %ile'];
       const zoneEl = document.getElementById('cape-zone');
       zoneEl.className = 'pulse-zone ' + zone[0];
       zoneEl.textContent = zone[1];
       document.getElementById('cape-val').style.color = val < 20 ? 'var(--ok)' : val < 30 ? 'var(--purple)' : 'var(--danger)';
-      document.getElementById('cape-sub').innerHTML = `CAPE · S&P 500 · ${obs[0].date} · Median ~16`;
-    } else {
-      // CAPE10 may not exist on FRED — show note
-      document.getElementById('cape-val').textContent = '—';
-      document.getElementById('cape-zone').textContent = 'FRED N/A';
-      document.getElementById('cape-zone').className = 'pulse-zone mid';
-      document.getElementById('cape-sub').innerHTML = 'Shiller PE not on FRED — will add alt source';
+      document.getElementById('cape-sub').innerHTML = `CAPE · S&P 500 · ${d.date} · Median ~16 · src: ${d.source}`;
     }
   } catch(e) { console.error('CAPE fetch error:', e); }
 }
 
-// Load TradingView widgets on page load
+// Load TradingView widgets and CAPE on page load
 loadTradingViewWidgets();
+loadCAPE();
 
 /* ═══════════ INIT ═══════════ */
 document.getElementById('api-key').addEventListener('keydown', e => { if(e.key==='Enter') fetchAll(); });
