@@ -854,24 +854,35 @@ async function aiSentiment(symbol, bullPct, bearPct) {
 
   const macroCtx = live.ffr != null ? `Current macro backdrop: Fed Funds ${live.ffr}%, 10Y yield ${live.y10}%, 2Y yield ${live.y2}%, 10Y-2Y spread ${live.spread}%, CPI ${live.cpi}%, Core CPI ${live.core}%, PCE ${live.pce}%.` : 'No macro data loaded yet.';
 
-  const query = `Search for the current stock price, recent performance, key fundamentals (P/E, market cap, revenue growth), latest analyst ratings/price targets, and any recent news for $${symbol} (ticker: ${symbol}).
-
-Then evaluate this as a trade idea using that data:
+  const query = `Search for the current stock price, recent performance, key fundamentals (P/E, market cap, revenue growth), latest analyst ratings/price targets, recent news, AND broader web sentiment (what are financial blogs, Twitter/X finance accounts, Reddit, and analysts saying about this stock right now — bullish or bearish?) for $${symbol} (ticker: ${symbol}).
 
 CONTEXT: Retail traders on StockTwits are currently ${bullPct}% bullish and ${bearPct}% bearish on $${symbol}.
 MACRO: ${macroCtx}
 
-Provide:
-1. Current price and recent performance (1W, 1M, YTD if available)
-2. Key fundamentals snapshot (P/E, market cap, revenue/earnings trends)
-3. What analysts are saying — consensus rating and price targets
-4. Recent catalysts or news moving the stock
-5. Is the StockTwits retail sentiment (${bullPct}% bull) a useful signal here or a contrarian warning?
-6. How does the macro environment affect this specific name?
-7. Risk/reward assessment — what could go right and what could go wrong
-8. Clear verdict: compelling trade idea, avoid, or needs more research. Be specific about direction and timeframe.
+Structure your response in these sections:
 
-Be direct, data-driven, and specific. Reference actual numbers from your search. This is for research only, not financial advice.`;
+📊 LIVE DATA SNAPSHOT
+- Current price and recent performance (1D, 1W, 1M, YTD)
+- Key fundamentals: P/E, market cap, revenue/earnings growth
+- Analyst consensus: rating, average price target, bull/bear targets
+
+📰 RECENT CATALYSTS
+- What news or events are driving the stock right now
+- Any upcoming earnings, FDA decisions, product launches, etc.
+
+🌐 WEB SENTIMENT PULSE
+- What is the overall sentiment across financial media, social platforms, and analyst commentary?
+- Are institutional/smart money voices aligned with or diverging from StockTwits retail sentiment (${bullPct}% bull)?
+- Flag any notable contrarian takes or red flags you find
+
+🧠 CLAUDE'S TRADE ASSESSMENT
+- Given ALL of the above (price action, fundamentals, analyst targets, web sentiment, retail sentiment, macro backdrop):
+- What is YOUR suggested positioning? Be specific: long, short, or stay away. Include timeframe (swing trade, position trade, avoid).
+- Entry zone, target, and stop loss levels if applicable
+- Confidence level: high conviction, moderate, or low conviction — and why
+- Key risk: what would make this trade blow up?
+
+Be direct and opinionated. Take a stance. Reference actual numbers from your search. This is for research purposes only, not financial advice.`;
 
   try {
     const r = await fetch('/api/search', {
