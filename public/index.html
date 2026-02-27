@@ -850,33 +850,38 @@ function escHtml(str) {
 
 async function aiSentiment(symbol, bullPct, bearPct) {
   const aiBox = document.getElementById('sent-ai');
-  aiBox.innerHTML = `<div class="ai-panel"><div class="ai-header"><h3>⬡ Trade Evaluation: $${symbol}</h3><span style="font-size:10px;color:var(--muted)" id="sent-ai-status">Thinking…</span></div><div class="ai-body"><div class="ai-output" id="sent-ai-output"><span style="color:var(--muted)"><span class="spinner-sm"></span> Claude is evaluating $${symbol} against macro data…</span></div></div></div>`;
+  aiBox.innerHTML = `<div class="ai-panel"><div class="ai-header"><h3>⬡ Trade Evaluation: $${symbol}</h3><span style="font-size:10px;color:var(--muted)" id="sent-ai-status">Searching web + analyzing…</span></div><div class="ai-body"><div class="ai-output" id="sent-ai-output"><span style="color:var(--muted)"><span class="spinner-sm"></span> Claude is searching for $${symbol} price, fundamentals, news, and analyst data…</span></div></div></div>`;
 
-  const macroCtx = live.ffr != null ? {
-    rates: { fedFunds: live.ffr, treasury2Y: live.y2, treasury10Y: live.y10, spread10Y2Y: live.spread },
-    inflation: { cpi: live.cpi, coreCPI: live.core, pce: live.pce }
-  } : {};
+  const macroCtx = live.ffr != null ? `Current macro backdrop: Fed Funds ${live.ffr}%, 10Y yield ${live.y10}%, 2Y yield ${live.y2}%, 10Y-2Y spread ${live.spread}%, CPI ${live.cpi}%, Core CPI ${live.core}%, PCE ${live.pce}%.` : 'No macro data loaded yet.';
 
-  const question = `Retail traders on StockTwits are currently ${bullPct}% bullish and ${bearPct}% bearish on $${symbol}.
+  const query = `Search for the current stock price, recent performance, key fundamentals (P/E, market cap, revenue growth), latest analyst ratings/price targets, and any recent news for $${symbol} (ticker: ${symbol}).
 
-Evaluate this as a trade idea:
-1. What's the bull case and bear case for $${symbol} right now?
-2. Is retail sentiment a useful signal here or a contrarian indicator?
-3. Given the current macro environment (data below), does this trade make sense?
-4. What's the risk/reward setup? What would invalidate the thesis?
-5. Give a clear verdict: interesting trade, avoid, or needs more context.
+Then evaluate this as a trade idea using that data:
 
-Be direct and specific. This is for research only, not financial advice.`;
+CONTEXT: Retail traders on StockTwits are currently ${bullPct}% bullish and ${bearPct}% bearish on $${symbol}.
+MACRO: ${macroCtx}
+
+Provide:
+1. Current price and recent performance (1W, 1M, YTD if available)
+2. Key fundamentals snapshot (P/E, market cap, revenue/earnings trends)
+3. What analysts are saying — consensus rating and price targets
+4. Recent catalysts or news moving the stock
+5. Is the StockTwits retail sentiment (${bullPct}% bull) a useful signal here or a contrarian warning?
+6. How does the macro environment affect this specific name?
+7. Risk/reward assessment — what could go right and what could go wrong
+8. Clear verdict: compelling trade idea, avoid, or needs more research. Be specific about direction and timeframe.
+
+Be direct, data-driven, and specific. Reference actual numbers from your search. This is for research only, not financial advice.`;
 
   try {
-    const r = await fetch('/api/analyze', {
+    const r = await fetch('/api/search', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ macroData: macroCtx, question })
+      body: JSON.stringify({ query })
     });
     const d = await r.json();
     if (d.error) throw new Error(d.error);
-    document.getElementById('sent-ai-output').textContent = d.analysis;
+    document.getElementById('sent-ai-output').textContent = d.result;
     document.getElementById('sent-ai-status').textContent = 'Complete';
   } catch(e) {
     document.getElementById('sent-ai-output').innerHTML = `<span style="color:var(--danger)">Error: ${e.message}</span>`;
