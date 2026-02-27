@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live Macro Dashboard — FRED</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c0f; --surface: #111318; --border: #1e2129; --border-lit: #2d3140;
+    --text: #c8cdd6; --muted: #505666; --accent: #00d4aa; --warn: #f5a623;
+    --danger: #e05c5c; --ok: #4caf7d; --label: #6b7280;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'IBM Plex Mono', monospace; font-size: 13px; min-height: 100vh; padding: 28px; }
+  body::before { content: ''; position: fixed; inset: 0; background-image: linear-gradient(rgba(0,212,170,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(0,212,170,0.025) 1px, transparent 1px); background-size: 40px 40px; pointer-events: none; z-index: 0; }
+  .container { max-width: 980px; margin: 0 auto; position: relative; z-index: 1; }
+
+  .api-panel { background: var(--surface); border: 1px solid var(--border-lit); border-radius: 6px; padding: 20px 24px; margin-bottom: 28px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .api-label { font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent); white-space: nowrap; }
+  .api-input { flex: 1; min-width: 200px; background: var(--bg); border: 1px solid var(--border-lit); border-radius: 3px; color: var(--text); font-family: 'IBM Plex Mono', monospace; font-size: 12px; padding: 8px 12px; transition: border-color 0.2s; }
+  .api-input:focus { outline: none; border-color: var(--accent); }
+  .api-input::placeholder { color: var(--muted); }
+  .fetch-btn { background: var(--accent); color: #0a0c0f; border: none; border-radius: 3px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; padding: 10px 20px; cursor: pointer; transition: opacity 0.2s; white-space: nowrap; }
+  .fetch-btn:hover { opacity: 0.85; }
+  .fetch-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .api-hint { font-size: 10px; color: var(--muted); width: 100%; margin-top: -8px; }
+  .api-hint a { color: var(--accent); text-decoration: none; }
+
+  header { display: flex; align-items: flex-end; justify-content: space-between; border-bottom: 1px solid var(--border-lit); padding-bottom: 16px; margin-bottom: 28px; flex-wrap: wrap; gap: 12px; }
+  .logo { font-size: 11px; letter-spacing: 0.18em; color: var(--accent); text-transform: uppercase; margin-bottom: 4px; }
+  h1 { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; color: #e8ecf2; }
+  .timestamp { font-size: 11px; color: var(--muted); text-align: right; }
+  .timestamp span { display: block; color: var(--accent); margin-top: 2px; }
+
+  .status-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; font-size: 11px; min-height: 24px; }
+  .spinner { width: 14px; height: 14px; border: 2px solid var(--border-lit); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; display: none; }
+  .spinner.active { display: block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .alerts { margin-bottom: 24px; display: flex; flex-direction: column; gap: 8px; }
+  .alert { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 4px; border-left: 3px solid; font-size: 12px; line-height: 1.5; animation: slideIn 0.4s ease both; }
+  .alert.warn   { background: rgba(245,166,35,0.07);  border-color: var(--warn);   color: var(--warn); }
+  .alert.ok     { background: rgba(76,175,125,0.07);  border-color: var(--ok);     color: var(--ok); }
+  .alert.info   { background: rgba(0,212,170,0.06);   border-color: var(--accent); color: var(--accent); }
+  .alert.danger { background: rgba(224,92,92,0.08);   border-color: var(--danger); color: var(--danger); }
+  @keyframes slideIn { from { opacity:0; transform:translateX(-8px); } to { opacity:1; transform:translateX(0); } }
+
+  .section-label { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; margin-top: 28px; }
+  .src-tag { color: var(--accent); font-size: 9px; margin-left: 8px; }
+
+  .cards { display: grid; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+  .cards.cols-3 { grid-template-columns: repeat(3, 1fr); }
+  .cards.cols-4 { grid-template-columns: repeat(4, 1fr); }
+  .card { background: var(--surface); padding: 18px 20px; position: relative; transition: background 0.15s; }
+  .card:hover { background: #14171e; }
+  .card-label { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--label); margin-bottom: 10px; }
+  .card-value { font-size: 28px; font-weight: 500; color: #e8ecf2; line-height: 1; letter-spacing: -0.03em; }
+  .card-value.loading { color: var(--border-lit); }
+  .card-unit { font-size: 13px; color: var(--muted); margin-left: 2px; }
+  .card-sub { margin-top: 8px; font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .card-date { font-size: 9px; color: var(--muted); margin-top: 4px; }
+  .badge { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; padding: 2px 7px; border-radius: 2px; font-weight: 500; }
+  .badge.up   { background: rgba(76,175,125,0.15); color: var(--ok); }
+  .badge.down { background: rgba(224,92,92,0.15);  color: var(--danger); }
+  .badge.flat { background: rgba(100,110,130,0.15); color: var(--muted); }
+  .badge.warn { background: rgba(245,166,35,0.15);  color: var(--warn); }
+  .badge.ok   { background: rgba(76,175,125,0.15);  color: var(--ok); }
+  .threshold-bar { margin-top: 10px; height: 3px; background: var(--border-lit); border-radius: 2px; overflow: hidden; }
+  .threshold-fill { height: 100%; border-radius: 2px; transition: width 1s ease; width: 0%; }
+  .status-dot { position: absolute; top: 14px; right: 14px; width: 7px; height: 7px; border-radius: 50%; }
+  .status-dot.ok     { background: var(--ok);     box-shadow: 0 0 6px var(--ok); }
+  .status-dot.warn   { background: var(--warn);   box-shadow: 0 0 6px var(--warn);   animation: pulse 2s infinite; }
+  .status-dot.danger { background: var(--danger); box-shadow: 0 0 6px var(--danger); animation: pulse 1s infinite; }
+  .status-dot.idle   { background: var(--border-lit); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  .curve-section { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 20px; }
+  .curve-chart { display: flex; align-items: flex-end; gap: 10px; height: 110px; margin-top: 16px; padding-bottom: 4px; border-bottom: 1px solid var(--border-lit); }
+  .curve-bar-wrap { display: flex; flex-direction: column; align-items: center; flex: 1; gap: 6px; height: 100%; justify-content: flex-end; }
+  .curve-bar { width: 100%; border-radius: 2px 2px 0 0; transition: height 0.8s ease; min-height: 2px; }
+  .curve-bar-label { font-size: 9px; color: var(--muted); }
+  .curve-bar-val { font-size: 10px; color: var(--text); margin-bottom: 4px; }
+
+  .thresholds-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 20px; margin-top: 20px; }
+  .thresholds-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 14px; }
+  .thresh-item { display: flex; flex-direction: column; gap: 6px; }
+  .thresh-item label { font-size: 10px; color: var(--label); letter-spacing: 0.1em; text-transform: uppercase; }
+  .thresh-item input { background: var(--bg); border: 1px solid var(--border-lit); border-radius: 3px; color: var(--text); font-family: 'IBM Plex Mono', monospace; font-size: 12px; padding: 6px 10px; width: 100%; transition: border-color 0.2s; }
+  .thresh-item input:focus { outline: none; border-color: var(--accent); }
+  .run-btn { margin-top: 16px; background: transparent; color: var(--accent); border: 1px solid var(--accent); border-radius: 3px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; padding: 10px 20px; cursor: pointer; transition: all 0.2s; }
+  .run-btn:hover { background: var(--accent); color: #0a0c0f; }
+
+  footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--border); font-size: 10px; color: var(--muted); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+  .source-tag { display: inline-flex; align-items: center; gap: 5px; background: rgba(0,212,170,0.06); border: 1px solid rgba(0,212,170,0.15); color: var(--accent); font-size: 9px; letter-spacing: 0.1em; padding: 3px 8px; border-radius: 2px; }
+
+  @media (max-width: 640px) {
+    .cards.cols-3, .cards.cols-4 { grid-template-columns: 1fr 1fr; }
+    .thresholds-grid { grid-template-columns: 1fr 1fr; }
+    body { padding: 16px; }
+    h1 { font-size: 18px; }
+    .card-value { font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div>
+      <div class="logo">Claude Moat Training // Week 1 — Live Build</div>
+      <h1>Macro Dashboard <span style="font-size:14px;font-weight:400;" id="live-indicator">○ NOT FETCHED</span></h1>
+    </div>
+    <div class="timestamp">Last refreshed<br><span id="ts">— awaiting fetch —</span></div>
+  </header>
+
+  <div class="api-panel">
+    <div class="api-label">🔑 FRED API Key</div>
+    <input class="api-input" id="api-key" type="password" placeholder="Paste your 32-char FRED API key…" autocomplete="off" spellcheck="false">
+    <button class="fetch-btn" id="fetch-btn" onclick="fetchAll()">▶ Fetch Live Data</button>
+    <div class="api-hint">Free key at <a href="https://fredaccount.stlouisfed.org" target="_blank">fredaccount.stlouisfed.org</a> — works on any device, no proxy needed.</div>
+  </div>
+
+  <div class="status-bar">
+    <div class="spinner" id="spinner"></div>
+    <span id="status-msg" style="color:var(--muted)">Enter your FRED API key and click Fetch.</span>
+  </div>
+
+  <div class="alerts" id="alerts">
+    <div class="alert info"><span>◎</span><span>Fetch live data to run threshold alerts.</span></div>
+  </div>
+
+  <div class="section-label">Policy & Lending Rates</div>
+  <div class="cards cols-3">
+    <div class="card"><div class="status-dot idle" id="dot-ffr"></div><div class="card-label">Fed Funds (Effective)</div><div class="card-value loading" id="val-ffr">—<span class="card-unit">%</span></div><div class="card-sub" id="sub-ffr">Awaiting data…</div><div class="card-date" id="date-ffr"></div><div class="threshold-bar"><div class="threshold-fill" id="fill-ffr"></div></div></div>
+    <div class="card"><div class="status-dot idle" id="dot-2y"></div><div class="card-label">2-Year Treasury</div><div class="card-value loading" id="val-2y">—<span class="card-unit">%</span></div><div class="card-sub" id="sub-2y">Awaiting data…</div><div class="card-date" id="date-2y"></div><div class="threshold-bar"><div class="threshold-fill" id="fill-2y"></div></div></div>
+    <div class="card"><div class="status-dot idle" id="dot-10y"></div><div class="card-label">10-Year Treasury</div><div class="card-value loading" id="val-10y">—<span class="card-unit">%</span></div><div class="card-sub" id="sub-10y">Awaiting data…</div><div class="card-date" id="date-10y"></div><div class="threshold-bar"><div class="threshold-fill" id="fill-10y"></div></div></div>
+  </div>
+
+  <div class="section-label">Extended Maturities <span class="src-tag">FRED / H.15</span></div>
+  <div class="cards cols-4">
+    <div class="card"><div class="status-dot idle" id="dot-5y"></div><div class="card-label">5-Year Treasury</div><div class="card-value loading" id="val-5y">—<span class="card-unit">%</span></div><div class="card-sub" id="sub-5y">Awaiting data…</div><div class="threshold-bar"><div class="threshold-fill" id="fill-5y"></div></div></div>
+    <div class="card"><div class="status-dot idle" id="dot-30y"></div><div class="card-label">30-Year Treasury</div><div class="card-value loading" id="val-30y">—<span class="card-unit">%</span></div><div class="card-sub" id="sub-30y">Awaiting data…</div><div class="threshold-bar"><div class="threshold-fill" id="fill-30y"></div></div></div>
+    <div class="card"><div class="status-dot idle" id="dot-spread"></div><div class="card-label">10Y–2Y Spread</div><div class="card-value loading" id="val-spread">—<span class="card-unit">%</span></div><div class="card-sub" id="sub-spread">Awaiting data…</div><div class="threshold-bar"><div class="threshold-fill" id="fill-spread"></div></div></div>
+    <div class="card"><div class="status-dot idle" id="dot-tips"></div><div class="card-label">10Y TIPS (Real)</div><div class="card-value loading" id="val-tips">—<span class="card-unit">%</span></div><div class="card-sub" id="sub-tips">Inflation-adjusted yield</div><div class="threshold-bar"><div class="threshold-fill" id="fill-tips"></div></div></div>
+  </div>
+
+  <div class="section-label">Yield Curve Snapshot</div>
+  <div class="curve-section">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+      <div style="font-size:11px;color:var(--muted)">Shape based on live FRED data</div>
+      <div id="curve-status" style="font-size:11px;color:var(--muted)">Fetch data to visualize</div>
+    </div>
+    <div class="curve-chart" id="curve-chart"><div style="margin:auto;color:var(--muted);font-size:11px">— awaiting data —</div></div>
+    <div id="curve-note" style="margin-top:10px;font-size:10px;color:var(--muted)">Fetch to see live yield curve shape.</div>
+  </div>
+
+  <div class="section-label">Inflation <span class="src-tag">BLS via FRED</span></div>
+  <div class="cards cols-3">
+    <div class="card"><div class="status-dot idle" id="dot-cpi"></div><div class="card-label">Headline CPI (YoY %)</div><div class="card-value loading" id="val-cpi">—<span class="card-unit">%</span></div><div class="card-sub" id="sub-cpi">Awaiting data…</div><div class="card-date" id="date-cpi"></div><div class="threshold-bar"><div class="threshold-fill" id="fill-cpi"></div></div></div>
+    <div class="card"><div class="status-dot idle" id="dot-core"></div><div class="card-label">Core CPI (YoY %)</div><div class="card-value loading" id="val-core">—<span class="card-unit">%</span></div><div class="card-sub" id="sub-core">Awaiting data…</div><div class="card-date" id="date-core"></div><div class="threshold-bar"><div class="threshold-fill" id="fill-core"></div></div></div>
+    <div class="card"><div class="status-dot idle" id="dot-pce"></div><div class="card-label">PCE Price Index (YoY)</div><div class="card-value loading" id="val-pce">—<span class="card-unit">%</span></div><div class="card-sub" id="sub-pce">Fed's preferred gauge</div><div class="card-date" id="date-pce"></div><div class="threshold-bar"><div class="threshold-fill" id="fill-pce"></div></div></div>
+  </div>
+
+  <div class="thresholds-panel">
+    <div style="font-size:10px;color:var(--accent);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:4px;">⚙ Alert Thresholds</div>
+    <div style="font-size:11px;color:var(--muted)">Customize your triggers. Alerts re-evaluate every fetch.</div>
+    <div class="thresholds-grid">
+      <div class="thresh-item"><label>10Y Yield Alert (%)</label><input type="number" id="t-10y" value="4.50" step="0.05"></div>
+      <div class="thresh-item"><label>2Y Yield Alert (%)</label><input type="number" id="t-2y" value="4.00" step="0.05"></div>
+      <div class="thresh-item"><label>Spread Inversion (%)</label><input type="number" id="t-spread" value="0.00" step="0.05"></div>
+      <div class="thresh-item"><label>Headline CPI Alert (%)</label><input type="number" id="t-cpi" value="3.00" step="0.1"></div>
+      <div class="thresh-item"><label>Core CPI Alert (%)</label><input type="number" id="t-core" value="3.00" step="0.1"></div>
+      <div class="thresh-item"><label>Fed Funds Alert (%)</label><input type="number" id="t-ffr" value="4.00" step="0.05"></div>
+    </div>
+    <button class="run-btn" onclick="runAlerts()">▶ Re-run Alert Check</button>
+  </div>
+
+  <footer>
+    <div>Live data via FRED® API — Federal Reserve Bank of St. Louis · <span id="footer-ts"></span></div>
+    <div style="display:flex;gap:8px;"><span class="source-tag" id="live-badge">○ NOT FETCHED</span><span class="source-tag">● DAY 1 BUILD</span></div>
+  </footer>
+</div>
+
+<script>
+const live = {};
+
+// Calls our Vercel serverless function at /api/fred
+// which proxies to FRED and adds CORS headers
+async function fredFetch(seriesId, apiKey, limit = 2) {
+  const url = `/api/fred?series_id=${seriesId}&api_key=${apiKey}&sort_order=desc&limit=${limit}`;
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`HTTP ${r.status} for ${seriesId}`);
+  const d = await r.json();
+  if (d.error_message) throw new Error(d.error_message);
+  return d.observations.filter(o => o.value !== '.');
+}
+
+function calcYoY(obs) {
+  if (!obs || obs.length < 13) return null;
+  return { yoy: ((+obs[0].value - +obs[12].value) / +obs[12].value * 100), date: obs[0].date };
+}
+
+async function fetchAll() {
+  const apiKey = document.getElementById('api-key').value.trim();
+  if (!apiKey || apiKey.length < 20) { setStatus('⚠ Enter a valid FRED API key first.', true); return; }
+
+  document.getElementById('fetch-btn').disabled = true;
+  document.getElementById('spinner').classList.add('active');
+  setStatus('Fetching live data from FRED…');
+
+  try {
+    const [ffrObs, y2Obs, y5Obs, y10Obs, y30Obs, spreadObs, tipsObs, cpiObs, coreObs, pceObs] =
+      await Promise.all([
+        fredFetch('DFF',      apiKey, 2),
+        fredFetch('DGS2',     apiKey, 2),
+        fredFetch('DGS5',     apiKey, 2),
+        fredFetch('DGS10',    apiKey, 2),
+        fredFetch('DGS30',    apiKey, 2),
+        fredFetch('T10Y2Y',   apiKey, 2),
+        fredFetch('DFII10',   apiKey, 2),
+        fredFetch('CPIAUCSL', apiKey, 14),
+        fredFetch('CPILFESL', apiKey, 14),
+        fredFetch('PCEPI',    apiKey, 14),
+      ]);
+
+    live.ffr    = +ffrObs[0].value;    live.ffrDate = ffrObs[0].date;    live.ffrPrev = +ffrObs[1]?.value;
+    live.y2     = +y2Obs[0].value;     live.y2Date  = y2Obs[0].date;     live.y2Prev  = +y2Obs[1]?.value;
+    live.y5     = +y5Obs[0].value;     live.y5Prev  = +y5Obs[1]?.value;
+    live.y10    = +y10Obs[0].value;    live.y10Date = y10Obs[0].date;    live.y10Prev = +y10Obs[1]?.value;
+    live.y30    = +y30Obs[0].value;    live.y30Prev = +y30Obs[1]?.value;
+    live.spread = +spreadObs[0].value;
+    live.tips   = +tipsObs[0].value;
+    const cpiYoY  = calcYoY(cpiObs);
+    const coreYoY = calcYoY(coreObs);
+    const pceYoY  = calcYoY(pceObs);
+    live.cpi  = cpiYoY?.yoy  ?? null; live.cpiDate  = cpiYoY?.date;
+    live.core = coreYoY?.yoy ?? null; live.coreDate = coreYoY?.date;
+    live.pce  = pceYoY?.yoy  ?? null; live.pceDate  = pceYoY?.date;
+
+    renderCards(); renderCurve(); runAlerts();
+
+    const now = new Date().toLocaleString('en-US', { month:'short', day:'numeric', year:'numeric', hour:'2-digit', minute:'2-digit' });
+    document.getElementById('ts').textContent = now;
+    document.getElementById('footer-ts').textContent = now;
+    document.getElementById('live-indicator').textContent = '● LIVE';
+    document.getElementById('live-indicator').style.color = 'var(--ok)';
+    document.getElementById('live-badge').textContent = '● LIVE';
+    document.getElementById('live-badge').style.color = 'var(--ok)';
+    setStatus('✓ All 10 series loaded from FRED — ' + now);
+  } catch(e) {
+    setStatus('✗ ' + e.message, true);
+  } finally {
+    document.getElementById('fetch-btn').disabled = false;
+    document.getElementById('spinner').classList.remove('active');
+  }
+}
+
+function setStatus(msg, err=false) {
+  const el = document.getElementById('status-msg');
+  el.textContent = msg; el.style.color = err ? 'var(--danger)' : 'var(--muted)';
+}
+
+function renderCard(id, val, prev, date, min, max) {
+  if (val == null || isNaN(val)) return;
+  const el = document.getElementById(`val-${id}`);
+  el.innerHTML = `${val.toFixed(2)}<span class="card-unit">%</span>`;
+  el.classList.remove('loading'); el.style.color = '#e8ecf2';
+  if (prev != null && !isNaN(prev)) {
+    const d = (val-prev).toFixed(2), cls = d>0?'up':d<0?'down':'flat', icon = d>0?'↑':d<0?'↓':'→';
+    const sub = document.getElementById(`sub-${id}`);
+    if (sub) sub.innerHTML = `<span class="badge ${cls}">${icon} ${Math.abs(d)}</span> prev session`;
+  }
+  const dateEl = document.getElementById(`date-${id}`);
+  if (dateEl && date) dateEl.textContent = `as of ${date}`;
+  const pct = Math.min(100, Math.max(0, ((val-min)/(max-min))*100));
+  const fill = document.getElementById(`fill-${id}`);
+  if (fill) { fill.style.width = pct+'%'; fill.style.background = pct>75?'var(--danger)':pct>50?'var(--warn)':'var(--ok)'; }
+  const dot = document.getElementById(`dot-${id}`);
+  if (dot) dot.className = 'status-dot '+(pct>75?'danger':pct>50?'warn':'ok');
+}
+
+function renderCards() {
+  renderCard('ffr', live.ffr, live.ffrPrev, live.ffrDate, 0, 8);
+  renderCard('2y',  live.y2,  live.y2Prev,  live.y2Date,  0, 7);
+  renderCard('10y', live.y10, live.y10Prev, live.y10Date, 0, 7);
+  renderCard('5y',  live.y5,  live.y5Prev,  null,         0, 7);
+  renderCard('30y', live.y30, live.y30Prev, null,         0, 7);
+  renderCard('tips',live.tips,null,         null,         0, 4);
+
+  if (live.spread != null) {
+    const inv = live.spread < 0;
+    const el = document.getElementById('val-spread');
+    el.innerHTML = `${live.spread.toFixed(2)}<span class="card-unit">%</span>`;
+    el.classList.remove('loading'); el.style.color = inv ? 'var(--danger)' : '#e8ecf2';
+    const sub = document.getElementById('sub-spread');
+    if (sub) sub.innerHTML = inv ? `<span class="badge down">⚠ INVERTED</span>` : `<span class="badge ok">● NORMAL</span>`;
+    const dot = document.getElementById('dot-spread');
+    if (dot) dot.className = 'status-dot '+(inv?'danger':'ok');
+    const fill = document.getElementById('fill-spread');
+    if (fill) { const p = Math.min(100,Math.max(0,((live.spread+2)/4)*100)); fill.style.width=p+'%'; fill.style.background=inv?'var(--danger)':'var(--ok)'; }
+  }
+
+  [['cpi',live.cpi,live.cpiDate],['core',live.core,live.coreDate],['pce',live.pce,live.pceDate]].forEach(([id,val,date]) => {
+    if (val==null) return;
+    const el = document.getElementById(`val-${id}`);
+    el.innerHTML = `${val.toFixed(1)}<span class="card-unit">%</span>`;
+    el.classList.remove('loading'); el.style.color='#e8ecf2';
+    const pct = Math.min(100,(val/6)*100);
+    const fill = document.getElementById(`fill-${id}`);
+    if (fill) { fill.style.width=pct+'%'; fill.style.background=val>3?'var(--danger)':val>2.5?'var(--warn)':'var(--ok)'; }
+    const dot = document.getElementById(`dot-${id}`);
+    if (dot) dot.className='status-dot '+(val>3?'danger':val>2.5?'warn':'ok');
+    const sub = document.getElementById(`sub-${id}`);
+    if (sub) sub.innerHTML=`<span class="badge ${val>2.5?'warn':'ok'}">${val>2?'↑ Above 2% target':'✓ Near target'}</span>`;
+    const dateEl = document.getElementById(`date-${id}`);
+    if (dateEl&&date) dateEl.textContent=`as of ${date}`;
+  });
+}
+
+function renderCurve() {
+  const pts = [{l:'2Y',v:live.y2},{l:'5Y',v:live.y5},{l:'10Y',v:live.y10},{l:'30Y',v:live.y30}].filter(p=>p.v!=null);
+  if (!pts.length) return;
+  const inv = live.spread < 0;
+  document.getElementById('curve-status').innerHTML = inv
+    ? `<span style="color:var(--danger)">⚠ INVERTED — Spread: ${live.spread?.toFixed(2)}%</span>`
+    : `<span class="badge ok">● Normal — Spread: ${live.spread?.toFixed(2)}%</span>`;
+  document.getElementById('curve-note').textContent = inv
+    ? 'Warning: Yield curve inverted. Historically precedes recession by 12–24 months.'
+    : 'Curve positively sloped. Monitor for compression toward inversion.';
+  const vals=pts.map(p=>p.v), mn=Math.min(...vals), mx=Math.max(...vals), rng=mx-mn||0.1;
+  const chart=document.getElementById('curve-chart'); chart.innerHTML='';
+  pts.forEach(p => {
+    const h=((p.v-mn)/rng)*70+20, c=inv?'var(--danger)':p.v>4?'var(--warn)':'var(--accent)';
+    chart.innerHTML+=`<div class="curve-bar-wrap"><div class="curve-bar-val">${p.v.toFixed(2)}</div><div class="curve-bar" style="height:${h}%;background:${c}"></div><div class="curve-bar-label" style="color:${c}">${p.l}</div></div>`;
+  });
+}
+
+function runAlerts() {
+  if (!live.ffr) { document.getElementById('alerts').innerHTML<`<div class="alert info"><span>◎</span><span>Fetch live data to run threshold alerts.</span></div>`; return; }
+  const t={y10:+document.getElementById('t-10y').value,y2:+document.getElementById('t-2y').value,spr:+document.getElementById('t-spread').value,cpi:+document.getElementById('t-cpi').value,cor:+document.getElementById('t-core').value,ffr:+document.getElementById('t-ffr').value};
+  const alerts=[];
+  const chk=(val,thr,name,aboveMsg,clearMsg)=>{
+    if(val==null)return;
+    alerts.push(val>=thr?{type:'warn',icon:'⚠',msg:`${name} (${val.toFixed(2)}%) hit alert of ${thr}%. ${aboveMsg}`}:{type:'ok',icon:'✓',msg:`${name} clear — ${val.toFixed(2)}% vs threshold ${thr}%. ${clearMsg}`});
+  };
+  chk(live.y10,t.y10,'10Y Treasury','Watch long-end rate pressure.','Long-end rates contained.');
+  chk(live.y2,t.y2,'2Y Treasury','Short end pricing tight policy.','Short rates below alert.');
+  chk(live.cpi,t.cpi,'Headline CPI','Inflation above target — rate cuts less likely.','Trending toward 2% target.');
+  chk(live.core,t.cor,'Core CPI','Services inflation sticky.','Core inflation contained.');
+  chk(live.ffr,t.ffr,'Fed Funds','High policy rate — financing costs elevated.','Policy rate within comfort range.');
+  if(live.spread!=null) alerts.push(live.spread<=t.spr?{type:'danger',icon:'🔴',msg:`INVERSION ALERT — 10Y–2Y spread is ${live.spread.toFixed(2)}%. Recession signal watch.`}:{type:'ok',icon:'✓',msg:`Yield curve spread (${live.spread.toFixed(2)}%) positive — sho inversion.`});
+  document.getElementById('alerts').innerHTML=alerts.map((a,i)=>`<div class="alert ${a.type}" style="animation-delay:${i*0.06}s"><span>${a.icon}</span><span>${a.msg}</span></div>`).join('');
+}
+
+document.getElementById('api-key').addEventListener('keydown', e => { if(e.key==='Enter') fetchAll(); });
+</script>
+</body>
+</html>
