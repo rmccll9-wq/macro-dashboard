@@ -3,193 +3,382 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Live Macro Dashboard — FRED</title>
+<title>Macro Command Center</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #0a0c0f; --surface: #111318; --border: #1e2129; --border-lit: #2d3140;
-    --text: #c8cdd6; --muted: #505666; --accent: #00d4aa; --warn: #f5a623;
-    --danger: #e05c5c; --ok: #4caf7d; --label: #6b7280;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text); font-family: 'IBM Plex Mono', monospace; font-size: 13px; min-height: 100vh; padding: 28px; }
-  body::before { content: ''; position: fixed; inset: 0; background-image: linear-gradient(rgba(0,212,170,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(0,212,170,0.025) 1px, transparent 1px); background-size: 40px 40px; pointer-events: none; z-index: 0; }
-  .container { max-width: 980px; margin: 0 auto; position: relative; z-index: 1; }
+:root {
+  --bg: #0a0c0f; --surface: #111318; --surface2: #161922; --border: #1e2129; --border-lit: #2d3140;
+  --text: #c8cdd6; --muted: #505666; --accent: #00d4aa; --accent2: #00b4d8; --warn: #f5a623;
+  --danger: #e05c5c; --ok: #4caf7d; --label: #6b7280; --purple: #a78bfa;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: 'IBM Plex Mono', monospace; font-size: 13px; min-height: 100vh; }
+body::before { content:''; position:fixed; inset:0; background-image: linear-gradient(rgba(0,212,170,0.02) 1px,transparent 1px), linear-gradient(90deg,rgba(0,212,170,0.02) 1px,transparent 1px); background-size:40px 40px; pointer-events:none; z-index:0; }
 
-  .api-panel { background: var(--surface); border: 1px solid var(--border-lit); border-radius: 6px; padding: 20px 24px; margin-bottom: 28px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-  .api-label { font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent); white-space: nowrap; }
-  .api-input { flex: 1; min-width: 200px; background: var(--bg); border: 1px solid var(--border-lit); border-radius: 3px; color: var(--text); font-family: 'IBM Plex Mono', monospace; font-size: 12px; padding: 8px 12px; transition: border-color 0.2s; }
-  .api-input:focus { outline: none; border-color: var(--accent); }
-  .api-input::placeholder { color: var(--muted); }
-  .fetch-btn { background: var(--accent); color: #0a0c0f; border: none; border-radius: 3px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; padding: 10px 20px; cursor: pointer; transition: opacity 0.2s; white-space: nowrap; }
-  .fetch-btn:hover { opacity: 0.85; }
-  .fetch-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-  .api-hint { font-size: 10px; color: var(--muted); width: 100%; margin-top: -8px; }
-  .api-hint a { color: var(--accent); text-decoration: none; }
+/* Layout */
+.shell { display:flex; min-height:100vh; position:relative; z-index:1; }
+.sidebar { width:220px; background:var(--surface); border-right:1px solid var(--border); padding:20px 0; flex-shrink:0; position:sticky; top:0; height:100vh; overflow-y:auto; }
+.sidebar-logo { padding:0 20px 20px; border-bottom:1px solid var(--border); margin-bottom:12px; }
+.sidebar-logo h2 { font-size:13px; color:var(--accent); letter-spacing:0.12em; text-transform:uppercase; }
+.sidebar-logo .sub { font-size:10px; color:var(--muted); margin-top:4px; }
+.nav-item { display:flex; align-items:center; gap:10px; padding:10px 20px; font-size:11px; letter-spacing:0.08em; color:var(--muted); cursor:pointer; transition:all 0.15s; border-left:2px solid transparent; }
+.nav-item:hover { color:var(--text); background:rgba(0,212,170,0.04); }
+.nav-item.active { color:var(--accent); border-left-color:var(--accent); background:rgba(0,212,170,0.06); }
+.nav-item .icon { font-size:14px; width:20px; text-align:center; }
+.nav-section { font-size:9px; letter-spacing:0.2em; color:var(--border-lit); padding:16px 20px 6px; text-transform:uppercase; }
 
-  header { display: flex; align-items: flex-end; justify-content: space-between; border-bottom: 1px solid var(--border-lit); padding-bottom: 16px; margin-bottom: 28px; flex-wrap: wrap; gap: 12px; }
-  .logo { font-size: 11px; letter-spacing: 0.18em; color: var(--accent); text-transform: uppercase; margin-bottom: 4px; }
-  h1 { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; color: #e8ecf2; }
-  .timestamp { font-size: 11px; color: var(--muted); text-align: right; }
-  .timestamp span { display: block; color: var(--accent); margin-top: 2px; }
+.main { flex:1; padding:24px 32px; max-width:1100px; overflow-y:auto; }
+.page { display:none; }
+.page.active { display:block; }
 
-  .status-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; font-size: 11px; min-height: 24px; }
-  .spinner { width: 14px; height: 14px; border: 2px solid var(--border-lit); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; display: none; }
-  .spinner.active { display: block; }
-  @keyframes spin { to { transform: rotate(360deg); } }
+/* Header bar */
+.topbar { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px; }
+.topbar h1 { font-size:20px; font-weight:600; color:#e8ecf2; letter-spacing:-0.02em; }
+.topbar-right { display:flex; align-items:center; gap:12px; }
+.status-pill { display:flex; align-items:center; gap:6px; font-size:10px; padding:4px 10px; border-radius:12px; background:var(--surface); border:1px solid var(--border); }
+.status-pill .dot { width:6px; height:6px; border-radius:50%; }
+.status-pill .dot.live { background:var(--ok); box-shadow:0 0 6px var(--ok); }
+.status-pill .dot.off { background:var(--border-lit); }
 
-  .alerts { margin-bottom: 24px; display: flex; flex-direction: column; gap: 8px; }
-  .alert { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 4px; border-left: 3px solid; font-size: 12px; line-height: 1.5; animation: slideIn 0.4s ease both; }
-  .alert.warn   { background: rgba(245,166,35,0.07);  border-color: var(--warn);   color: var(--warn); }
-  .alert.ok     { background: rgba(76,175,125,0.07);  border-color: var(--ok);     color: var(--ok); }
-  .alert.info   { background: rgba(0,212,170,0.06);   border-color: var(--accent); color: var(--accent); }
-  .alert.danger { background: rgba(224,92,92,0.08);   border-color: var(--danger); color: var(--danger); }
-  @keyframes slideIn { from { opacity:0; transform:translateX(-8px); } to { opacity:1; transform:translateX(0); } }
+/* API Panel */
+.api-panel { background:var(--surface); border:1px solid var(--border-lit); border-radius:6px; padding:16px 20px; margin-bottom:20px; display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.api-label { font-size:10px; letter-spacing:0.15em; text-transform:uppercase; color:var(--accent); white-space:nowrap; }
+.api-input { flex:1; min-width:200px; background:var(--bg); border:1px solid var(--border-lit); border-radius:3px; color:var(--text); font-family:'IBM Plex Mono',monospace; font-size:12px; padding:8px 12px; }
+.api-input:focus { outline:none; border-color:var(--accent); }
+.api-input::placeholder { color:var(--muted); }
+.btn { border:none; border-radius:3px; font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; padding:9px 16px; cursor:pointer; transition:all 0.2s; }
+.btn-primary { background:var(--accent); color:#0a0c0f; }
+.btn-primary:hover { opacity:0.85; }
+.btn-primary:disabled { opacity:0.4; cursor:not-allowed; }
+.btn-outline { background:transparent; color:var(--accent); border:1px solid var(--accent); }
+.btn-outline:hover { background:var(--accent); color:#0a0c0f; }
+.btn-ghost { background:transparent; color:var(--muted); border:1px solid var(--border-lit); }
+.btn-ghost:hover { color:var(--text); border-color:var(--text); }
+.api-hint { font-size:10px; color:var(--muted); width:100%; }
+.api-hint a { color:var(--accent); text-decoration:none; }
 
-  .section-label { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; margin-top: 28px; }
-  .src-tag { color: var(--accent); font-size: 9px; margin-left: 8px; }
+/* Cards */
+.section-label { font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:var(--muted); margin:24px 0 10px; display:flex; align-items:center; gap:8px; }
+.src-tag { color:var(--accent); font-size:9px; }
+.cards { display:grid; gap:1px; background:var(--border); border:1px solid var(--border); border-radius:6px; overflow:hidden; }
+.cards.c3 { grid-template-columns:repeat(3,1fr); }
+.cards.c4 { grid-template-columns:repeat(4,1fr); }
+.cards.c2 { grid-template-columns:repeat(2,1fr); }
+.card { background:var(--surface); padding:16px 18px; position:relative; transition:background 0.15s; }
+.card:hover { background:#14171e; }
+.card-label { font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--label); margin-bottom:8px; }
+.card-value { font-size:26px; font-weight:500; color:#e8ecf2; line-height:1; letter-spacing:-0.03em; }
+.card-value.dim { color:var(--border-lit); }
+.card-unit { font-size:13px; color:var(--muted); margin-left:2px; }
+.card-sub { margin-top:6px; font-size:11px; color:var(--muted); display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.card-date { font-size:9px; color:var(--muted); margin-top:3px; }
+.badge { display:inline-flex; align-items:center; gap:3px; font-size:10px; padding:2px 7px; border-radius:2px; font-weight:500; }
+.badge.up { background:rgba(76,175,125,0.15); color:var(--ok); }
+.badge.down { background:rgba(224,92,92,0.15); color:var(--danger); }
+.badge.flat { background:rgba(100,110,130,0.15); color:var(--muted); }
+.badge.warn { background:rgba(245,166,35,0.15); color:var(--warn); }
+.badge.ok { background:rgba(76,175,125,0.15); color:var(--ok); }
+.badge.info { background:rgba(0,212,170,0.1); color:var(--accent); }
+.badge.purple { background:rgba(167,139,250,0.15); color:var(--purple); }
+.dot-status { position:absolute; top:12px; right:12px; width:6px; height:6px; border-radius:50%; }
+.dot-status.ok { background:var(--ok); box-shadow:0 0 5px var(--ok); }
+.dot-status.warn { background:var(--warn); box-shadow:0 0 5px var(--warn); animation:pulse 2s infinite; }
+.dot-status.danger { background:var(--danger); box-shadow:0 0 5px var(--danger); animation:pulse 1s infinite; }
+.dot-status.idle { background:var(--border-lit); }
+.threshold-bar { margin-top:8px; height:3px; background:var(--border-lit); border-radius:2px; overflow:hidden; }
+.threshold-fill { height:100%; border-radius:2px; transition:width 1s ease; width:0%; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
 
-  .cards { display: grid; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
-  .cards.cols-3 { grid-template-columns: repeat(3, 1fr); }
-  .cards.cols-4 { grid-template-columns: repeat(4, 1fr); }
-  .card { background: var(--surface); padding: 18px 20px; position: relative; transition: background 0.15s; }
-  .card:hover { background: #14171e; }
-  .card-label { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--label); margin-bottom: 10px; }
-  .card-value { font-size: 28px; font-weight: 500; color: #e8ecf2; line-height: 1; letter-spacing: -0.03em; }
-  .card-value.loading { color: var(--border-lit); }
-  .card-unit { font-size: 13px; color: var(--muted); margin-left: 2px; }
-  .card-sub { margin-top: 8px; font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-  .card-date { font-size: 9px; color: var(--muted); margin-top: 4px; }
-  .badge { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; padding: 2px 7px; border-radius: 2px; font-weight: 500; }
-  .badge.up   { background: rgba(76,175,125,0.15); color: var(--ok); }
-  .badge.down { background: rgba(224,92,92,0.15);  color: var(--danger); }
-  .badge.flat { background: rgba(100,110,130,0.15); color: var(--muted); }
-  .badge.warn { background: rgba(245,166,35,0.15);  color: var(--warn); }
-  .badge.ok   { background: rgba(76,175,125,0.15);  color: var(--ok); }
-  .threshold-bar { margin-top: 10px; height: 3px; background: var(--border-lit); border-radius: 2px; overflow: hidden; }
-  .threshold-fill { height: 100%; border-radius: 2px; transition: width 1s ease; width: 0%; }
-  .status-dot { position: absolute; top: 14px; right: 14px; width: 7px; height: 7px; border-radius: 50%; }
-  .status-dot.ok     { background: var(--ok);     box-shadow: 0 0 6px var(--ok); }
-  .status-dot.warn   { background: var(--warn);   box-shadow: 0 0 6px var(--warn);   animation: pulse 2s infinite; }
-  .status-dot.danger { background: var(--danger); box-shadow: 0 0 6px var(--danger); animation: pulse 1s infinite; }
-  .status-dot.idle   { background: var(--border-lit); }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+/* Alerts */
+.alerts { display:flex; flex-direction:column; gap:6px; margin-bottom:16px; }
+.alert { display:flex; align-items:center; gap:10px; padding:9px 14px; border-radius:4px; border-left:3px solid; font-size:12px; line-height:1.5; animation:slideIn 0.4s ease both; }
+.alert.warn { background:rgba(245,166,35,0.07); border-color:var(--warn); color:var(--warn); }
+.alert.ok { background:rgba(76,175,125,0.07); border-color:var(--ok); color:var(--ok); }
+.alert.info { background:rgba(0,212,170,0.06); border-color:var(--accent); color:var(--accent); }
+.alert.danger { background:rgba(224,92,92,0.08); border-color:var(--danger); color:var(--danger); }
+@keyframes slideIn { from{opacity:0;transform:translateX(-8px)} to{opacity:1;transform:translateX(0)} }
 
-  .curve-section { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 20px; }
-  .curve-chart { display: flex; align-items: flex-end; gap: 10px; height: 110px; margin-top: 16px; padding-bottom: 4px; border-bottom: 1px solid var(--border-lit); }
-  .curve-bar-wrap { display: flex; flex-direction: column; align-items: center; flex: 1; gap: 6px; height: 100%; justify-content: flex-end; }
-  .curve-bar { width: 100%; border-radius: 2px 2px 0 0; transition: height 0.8s ease; min-height: 2px; }
-  .curve-bar-label { font-size: 9px; color: var(--muted); }
-  .curve-bar-val { font-size: 10px; color: var(--text); margin-bottom: 4px; }
+/* Curve */
+.curve-section { background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:18px; }
+.curve-chart { display:flex; align-items:flex-end; gap:10px; height:100px; margin-top:14px; padding-bottom:4px; border-bottom:1px solid var(--border-lit); }
+.curve-bar-wrap { display:flex; flex-direction:column; align-items:center; flex:1; gap:5px; height:100%; justify-content:flex-end; }
+.curve-bar { width:100%; border-radius:2px 2px 0 0; transition:height 0.8s ease; min-height:2px; }
+.curve-bar-label { font-size:9px; color:var(--muted); }
+.curve-bar-val { font-size:10px; color:var(--text); margin-bottom:3px; }
 
-  .thresholds-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 20px; margin-top: 20px; }
-  .thresholds-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 14px; }
-  .thresh-item { display: flex; flex-direction: column; gap: 6px; }
-  .thresh-item label { font-size: 10px; color: var(--label); letter-spacing: 0.1em; text-transform: uppercase; }
-  .thresh-item input { background: var(--bg); border: 1px solid var(--border-lit); border-radius: 3px; color: var(--text); font-family: 'IBM Plex Mono', monospace; font-size: 12px; padding: 6px 10px; width: 100%; transition: border-color 0.2s; }
-  .thresh-item input:focus { outline: none; border-color: var(--accent); }
-  .run-btn { margin-top: 16px; background: transparent; color: var(--accent); border: 1px solid var(--accent); border-radius: 3px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; padding: 10px 20px; cursor: pointer; transition: all 0.2s; }
-  .run-btn:hover { background: var(--accent); color: #0a0c0f; }
+/* Thresholds */
+.thresholds-panel { background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:18px; margin-top:16px; }
+.thresholds-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:12px; }
+.thresh-item label { font-size:10px; color:var(--label); letter-spacing:0.1em; text-transform:uppercase; display:block; margin-bottom:5px; }
+.thresh-item input { background:var(--bg); border:1px solid var(--border-lit); border-radius:3px; color:var(--text); font-family:'IBM Plex Mono',monospace; font-size:12px; padding:6px 10px; width:100%; }
+.thresh-item input:focus { outline:none; border-color:var(--accent); }
 
-  footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--border); font-size: 10px; color: var(--muted); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
-  .source-tag { display: inline-flex; align-items: center; gap: 5px; background: rgba(0,212,170,0.06); border: 1px solid rgba(0,212,170,0.15); color: var(--accent); font-size: 9px; letter-spacing: 0.1em; padding: 3px 8px; border-radius: 2px; }
+/* Calendar */
+.cal-list { display:flex; flex-direction:column; gap:6px; }
+.cal-item { display:flex; align-items:center; gap:14px; padding:12px 16px; background:var(--surface); border:1px solid var(--border); border-radius:5px; transition:border-color 0.15s; }
+.cal-item:hover { border-color:var(--border-lit); }
+.cal-item.today { border-color:var(--accent); background:rgba(0,212,170,0.04); }
+.cal-item.past { opacity:0.45; }
+.cal-date { min-width:80px; text-align:center; }
+.cal-date .day { font-size:20px; font-weight:600; color:#e8ecf2; line-height:1; }
+.cal-date .month { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.1em; }
+.cal-info { flex:1; }
+.cal-info .type { font-size:12px; font-weight:500; color:#e8ecf2; }
+.cal-info .desc { font-size:11px; color:var(--muted); margin-top:2px; }
+.cal-countdown { font-size:11px; font-weight:500; min-width:70px; text-align:right; }
 
-  @media (max-width: 640px) {
-    .cards.cols-3, .cards.cols-4 { grid-template-columns: 1fr 1fr; }
-    .thresholds-grid { grid-template-columns: 1fr 1fr; }
-    body { padding: 16px; }
-    h1 { font-size: 18px; }
-    .card-value { font-size: 22px; }
-  }
+/* News */
+.news-list { display:flex; flex-direction:column; gap:4px; }
+.news-item { padding:12px 16px; background:var(--surface); border:1px solid var(--border); border-radius:5px; transition:border-color 0.15s; }
+.news-item:hover { border-color:var(--border-lit); }
+.news-item .headline { font-size:12px; color:#e8ecf2; line-height:1.4; }
+.news-item .headline a { color:#e8ecf2; text-decoration:none; }
+.news-item .headline a:hover { color:var(--accent); }
+.news-item .meta { display:flex; gap:10px; margin-top:5px; font-size:10px; color:var(--muted); }
+.news-item .source-tag { color:var(--accent); }
+
+/* AI Panel */
+.ai-panel { background:var(--surface); border:1px solid var(--border); border-radius:6px; overflow:hidden; }
+.ai-header { padding:16px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.ai-header h3 { font-size:12px; color:var(--accent); letter-spacing:0.1em; text-transform:uppercase; }
+.ai-body { padding:20px; }
+.ai-input-row { display:flex; gap:10px; margin-bottom:16px; }
+.ai-input { flex:1; background:var(--bg); border:1px solid var(--border-lit); border-radius:4px; color:var(--text); font-family:'IBM Plex Mono',monospace; font-size:12px; padding:10px 14px; resize:none; }
+.ai-input:focus { outline:none; border-color:var(--accent); }
+.ai-input::placeholder { color:var(--muted); }
+.ai-output { background:var(--bg); border:1px solid var(--border); border-radius:4px; padding:16px; min-height:200px; font-size:12px; line-height:1.7; color:var(--text); white-space:pre-wrap; overflow-y:auto; max-height:500px; }
+.ai-output .placeholder { color:var(--muted); font-style:italic; }
+.ai-presets { display:flex; gap:6px; margin-bottom:12px; flex-wrap:wrap; }
+.ai-presets .btn-ghost { font-size:10px; padding:5px 10px; }
+.spinner-sm { width:14px; height:14px; border:2px solid var(--border-lit); border-top-color:var(--accent); border-radius:50%; animation:spin 0.7s linear infinite; display:inline-block; }
+@keyframes spin { to{transform:rotate(360deg)} }
+
+/* Search panel */
+.search-panel { background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:20px; }
+.search-output { background:var(--bg); border:1px solid var(--border); border-radius:4px; padding:16px; min-height:150px; font-size:12px; line-height:1.7; color:var(--text); white-space:pre-wrap; overflow-y:auto; max-height:400px; margin-top:14px; }
+
+/* Macro extended cards */
+.macro-cat-title { font-size:11px; color:var(--accent); letter-spacing:0.12em; text-transform:uppercase; margin:20px 0 8px; }
+
+/* Footer */
+footer { margin-top:32px; padding:16px 0; border-top:1px solid var(--border); font-size:10px; color:var(--muted); display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; }
+
+/* Responsive */
+@media(max-width:768px) {
+  .sidebar { display:none; }
+  .main { padding:16px; }
+  .cards.c3,.cards.c4 { grid-template-columns:1fr 1fr; }
+  .thresholds-grid { grid-template-columns:1fr 1fr; }
+  .topbar h1 { font-size:16px; }
+  .card-value { font-size:20px; }
+  .mobile-nav { display:flex !important; }
+}
+.mobile-nav { display:none; position:fixed; bottom:0; left:0; right:0; background:var(--surface); border-top:1px solid var(--border); z-index:100; justify-content:space-around; padding:8px 0; }
+.mobile-nav .mob-item { display:flex; flex-direction:column; align-items:center; gap:2px; font-size:9px; color:var(--muted); cursor:pointer; padding:4px 8px; }
+.mobile-nav .mob-item.active { color:var(--accent); }
+.mobile-nav .mob-item .icon { font-size:16px; }
 </style>
 </head>
 <body>
-<div class="container">
-
-  <header>
-    <div>
-      <div class="logo">Claude Moat Training // Week 1 — Live Build</div>
-      <h1>Macro Dashboard <span style="font-size:14px;font-weight:400;" id="live-indicator">○ NOT FETCHED</span></h1>
+<div class="shell">
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <h2>Macro CMD</h2>
+      <div class="sub">Command Center v2</div>
     </div>
-    <div class="timestamp">Last refreshed<br><span id="ts">— awaiting fetch —</span></div>
-  </header>
+    <div class="nav-section">Markets</div>
+    <div class="nav-item active" onclick="showPage('dashboard')"><span class="icon">◉</span> Dashboard</div>
+    <div class="nav-item" onclick="showPage('extended')"><span class="icon">◫</span> Extended Macro</div>
+    <div class="nav-section">Intelligence</div>
+    <div class="nav-item" onclick="showPage('ai')"><span class="icon">⬡</span> AI Analysis</div>
+    <div class="nav-item" onclick="showPage('search')"><span class="icon">◎</span> Web Intel</div>
+    <div class="nav-section">Events</div>
+    <div class="nav-item" onclick="showPage('calendar')"><span class="icon">▦</span> Fed / Data Cal</div>
+    <div class="nav-item" onclick="showPage('news')"><span class="icon">▤</span> News Feed</div>
+    <div class="nav-section">Settings</div>
+    <div class="nav-item" onclick="showPage('settings')"><span class="icon">⚙</span> Thresholds</div>
+  </nav>
 
-  <div class="api-panel">
-    <div class="api-label">🔑 FRED API Key</div>
-    <input class="api-input" id="api-key" type="password" placeholder="Paste your 32-char FRED API key…" autocomplete="off" spellcheck="false">
-    <button class="fetch-btn" id="fetch-btn" onclick="fetchAll()">▶ Fetch Live Data</button>
-    <div class="api-hint">Free key at <a href="https://fredaccount.stlouisfed.org" target="_blank">fredaccount.stlouisfed.org</a> — works on any device, no proxy needed.</div>
-  </div>
-
-  <div class="status-bar">
-    <div class="spinner" id="spinner"></div>
-    <span id="status-msg" style="color:var(--muted)">Enter your FRED API key and click Fetch.</span>
-  </div>
-
-  <div class="alerts" id="alerts">
-    <div class="alert info"><span>◎</span><span>Fetch live data to run threshold alerts.</span></div>
-  </div>
-
-  <div class="section-label">Policy & Lending Rates</div>
-  <div class="cards cols-3">
-    <div class="card"><div class="status-dot idle" id="dot-ffr"></div><div class="card-label">Fed Funds (Effective)</div><div class="card-value loading" id="val-ffr">—<span class="card-unit">%</span></div><div class="card-sub" id="sub-ffr">Awaiting data…</div><div class="card-date" id="date-ffr"></div><div class="threshold-bar"><div class="threshold-fill" id="fill-ffr"></div></div></div>
-    <div class="card"><div class="status-dot idle" id="dot-2y"></div><div class="card-label">2-Year Treasury</div><div class="card-value loading" id="val-2y">—<span class="card-unit">%</span></div><div class="card-sub" id="sub-2y">Awaiting data…</div><div class="card-date" id="date-2y"></div><div class="threshold-bar"><div class="threshold-fill" id="fill-2y"></div></div></div>
-    <div class="card"><div class="status-dot idle" id="dot-10y"></div><div class="card-label">10-Year Treasury</div><div class="card-value loading" id="val-10y">—<span class="card-unit">%</span></div><div class="card-sub" id="sub-10y">Awaiting data…</div><div class="card-date" id="date-10y"></div><div class="threshold-bar"><div class="threshold-fill" id="fill-10y"></div></div></div>
-  </div>
-
-  <div class="section-label">Extended Maturities <span class="src-tag">FRED / H.15</span></div>
-  <div class="cards cols-4">
-    <div class="card"><div class="status-dot idle" id="dot-5y"></div><div class="card-label">5-Year Treasury</div><div class="card-value loading" id="val-5y">—<span class="card-unit">%</span></div><div class="card-sub" id="sub-5y">Awaiting data…</div><div class="threshold-bar"><div class="threshold-fill" id="fill-5y"></div></div></div>
-    <div class="card"><div class="status-dot idle" id="dot-30y"></div><div class="card-label">30-Year Treasury</div><div class="card-value loading" id="val-30y">—<span class="card-unit">%</span></div><div class="card-sub" id="sub-30y">Awaiting data…</div><div class="threshold-bar"><div class="threshold-fill" id="fill-30y"></div></div></div>
-    <div class="card"><div class="status-dot idle" id="dot-spread"></div><div class="card-label">10Y–2Y Spread</div><div class="card-value loading" id="val-spread">—<span class="card-unit">%</span></div><div class="card-sub" id="sub-spread">Awaiting data…</div><div class="threshold-bar"><div class="threshold-fill" id="fill-spread"></div></div></div>
-    <div class="card"><div class="status-dot idle" id="dot-tips"></div><div class="card-label">10Y TIPS (Real)</div><div class="card-value loading" id="val-tips">—<span class="card-unit">%</span></div><div class="card-sub" id="sub-tips">Inflation-adjusted yield</div><div class="threshold-bar"><div class="threshold-fill" id="fill-tips"></div></div></div>
-  </div>
-
-  <div class="section-label">Yield Curve Snapshot</div>
-  <div class="curve-section">
-    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-      <div style="font-size:11px;color:var(--muted)">Shape based on live FRED data</div>
-      <div id="curve-status" style="font-size:11px;color:var(--muted)">Fetch data to visualize</div>
+  <!-- Main Content -->
+  <div class="main">
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <h1 id="page-title">Dashboard</h1>
+      <div class="topbar-right">
+        <div class="status-pill"><div class="dot off" id="live-dot"></div><span id="live-label">OFFLINE</span></div>
+        <span style="font-size:10px;color:var(--muted)" id="ts-top"></span>
+      </div>
     </div>
-    <div class="curve-chart" id="curve-chart"><div style="margin:auto;color:var(--muted);font-size:11px">— awaiting data —</div></div>
-    <div id="curve-note" style="margin-top:10px;font-size:10px;color:var(--muted)">Fetch to see live yield curve shape.</div>
-  </div>
 
-  <div class="section-label">Inflation <span class="src-tag">BLS via FRED</span></div>
-  <div class="cards cols-3">
-    <div class="card"><div class="status-dot idle" id="dot-cpi"></div><div class="card-label">Headline CPI (YoY %)</div><div class="card-value loading" id="val-cpi">—<span class="card-unit">%</span></div><div class="card-sub" id="sub-cpi">Awaiting data…</div><div class="card-date" id="date-cpi"></div><div class="threshold-bar"><div class="threshold-fill" id="fill-cpi"></div></div></div>
-    <div class="card"><div class="status-dot idle" id="dot-core"></div><div class="card-label">Core CPI (YoY %)</div><div class="card-value loading" id="val-core">—<span class="card-unit">%</span></div><div class="card-sub" id="sub-core">Awaiting data…</div><div class="card-date" id="date-core"></div><div class="threshold-bar"><div class="threshold-fill" id="fill-core"></div></div></div>
-    <div class="card"><div class="status-dot idle" id="dot-pce"></div><div class="card-label">PCE Price Index (YoY)</div><div class="card-value loading" id="val-pce">—<span class="card-unit">%</span></div><div class="card-sub" id="sub-pce">Fed's preferred gauge</div><div class="card-date" id="date-pce"></div><div class="threshold-bar"><div class="threshold-fill" id="fill-pce"></div></div></div>
-  </div>
+    <!-- ============ PAGE: DASHBOARD ============ -->
+    <div class="page active" id="page-dashboard">
+      <div class="api-panel">
+        <div class="api-label">🔑 FRED Key</div>
+        <input class="api-input" id="api-key" type="password" placeholder="FRED API key…" autocomplete="off" spellcheck="false">
+        <button class="btn btn-primary" id="fetch-btn" onclick="fetchAll()">▶ Fetch</button>
+        <div class="api-hint">Key from <a href="https://fredaccount.stlouisfed.org" target="_blank">fredaccount.stlouisfed.org</a> · stored in browser only</div>
+      </div>
 
-  <div class="thresholds-panel">
-    <div style="font-size:10px;color:var(--accent);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:4px;">⚙ Alert Thresholds</div>
-    <div style="font-size:11px;color:var(--muted)">Customize your triggers. Alerts re-evaluate every fetch.</div>
-    <div class="thresholds-grid">
-      <div class="thresh-item"><label>10Y Yield Alert (%)</label><input type="number" id="t-10y" value="4.50" step="0.05"></div>
-      <div class="thresh-item"><label>2Y Yield Alert (%)</label><input type="number" id="t-2y" value="4.00" step="0.05"></div>
-      <div class="thresh-item"><label>Spread Inversion (%)</label><input type="number" id="t-spread" value="0.00" step="0.05"></div>
-      <div class="thresh-item"><label>Headline CPI Alert (%)</label><input type="number" id="t-cpi" value="3.00" step="0.1"></div>
-      <div class="thresh-item"><label>Core CPI Alert (%)</label><input type="number" id="t-core" value="3.00" step="0.1"></div>
-      <div class="thresh-item"><label>Fed Funds Alert (%)</label><input type="number" id="t-ffr" value="4.00" step="0.05"></div>
+      <div class="alerts" id="alerts"><div class="alert info"><span>◎</span><span>Enter FRED key and fetch to load live data.</span></div></div>
+
+      <div class="section-label">Policy & Lending Rates</div>
+      <div class="cards c3">
+        <div class="card"><div class="dot-status idle" id="dot-ffr"></div><div class="card-label">Fed Funds (Eff.)</div><div class="card-value dim" id="val-ffr">—<span class="card-unit">%</span></div><div class="card-sub" id="sub-ffr">—</div><div class="card-date" id="date-ffr"></div><div class="threshold-bar"><div class="threshold-fill" id="fill-ffr"></div></div></div>
+        <div class="card"><div class="dot-status idle" id="dot-2y"></div><div class="card-label">2-Year Treasury</div><div class="card-value dim" id="val-2y">—<span class="card-unit">%</span></div><div class="card-sub" id="sub-2y">—</div><div class="card-date" id="date-2y"></div><div class="threshold-bar"><div class="threshold-fill" id="fill-2y"></div></div></div>
+        <div class="card"><div class="dot-status idle" id="dot-10y"></div><div class="card-label">10-Year Treasury</div><div class="card-value dim" id="val-10y">—<span class="card-unit">%</span></div><div class="card-sub" id="sub-10y">—</div><div class="card-date" id="date-10y"></div><div class="threshold-bar"><div class="threshold-fill" id="fill-10y"></div></div></div>
+      </div>
+
+      <div class="section-label">Extended Maturities <span class="src-tag">FRED / H.15</span></div>
+      <div class="cards c4">
+        <div class="card"><div class="dot-status idle" id="dot-5y"></div><div class="card-label">5Y Treasury</div><div class="card-value dim" id="val-5y">—<span class="card-unit">%</span></div><div class="card-sub" id="sub-5y">—</div><div class="threshold-bar"><div class="threshold-fill" id="fill-5y"></div></div></div>
+        <div class="card"><div class="dot-status idle" id="dot-30y"></div><div class="card-label">30Y Treasury</div><div class="card-value dim" id="val-30y">—<span class="card-unit">%</span></div><div class="card-sub" id="sub-30y">—</div><div class="threshold-bar"><div class="threshold-fill" id="fill-30y"></div></div></div>
+        <div class="card"><div class="dot-status idle" id="dot-spread"></div><div class="card-label">10Y–2Y Spread</div><div class="card-value dim" id="val-spread">—<span class="card-unit">%</span></div><div class="card-sub" id="sub-spread">—</div><div class="threshold-bar"><div class="threshold-fill" id="fill-spread"></div></div></div>
+        <div class="card"><div class="dot-status idle" id="dot-tips"></div><div class="card-label">10Y TIPS (Real)</div><div class="card-value dim" id="val-tips">—<span class="card-unit">%</span></div><div class="card-sub" id="sub-tips">Real yield</div><div class="threshold-bar"><div class="threshold-fill" id="fill-tips"></div></div></div>
+      </div>
+
+      <div class="section-label">Yield Curve</div>
+      <div class="curve-section">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+          <div style="font-size:11px;color:var(--muted)">Live shape from FRED</div>
+          <div id="curve-status" style="font-size:11px;color:var(--muted)">Awaiting data</div>
+        </div>
+        <div class="curve-chart" id="curve-chart"><div style="margin:auto;color:var(--muted);font-size:11px">— fetch to visualize —</div></div>
+        <div id="curve-note" style="margin-top:8px;font-size:10px;color:var(--muted)"></div>
+      </div>
+
+      <div class="section-label">Inflation <span class="src-tag">BLS via FRED</span></div>
+      <div class="cards c3">
+        <div class="card"><div class="dot-status idle" id="dot-cpi"></div><div class="card-label">Headline CPI (YoY)</div><div class="card-value dim" id="val-cpi">—<span class="card-unit">%</span></div><div class="card-sub" id="sub-cpi">—</div><div class="card-date" id="date-cpi"></div><div class="threshold-bar"><div class="threshold-fill" id="fill-cpi"></div></div></div>
+        <div class="card"><div class="dot-status idle" id="dot-core"></div><div class="card-label">Core CPI (YoY)</div><div class="card-value dim" id="val-core">—<span class="card-unit">%</span></div><div class="card-sub" id="sub-core">—</div><div class="card-date" id="date-core"></div><div class="threshold-bar"><div class="threshold-fill" id="fill-core"></div></div></div>
+        <div class="card"><div class="dot-status idle" id="dot-pce"></div><div class="card-label">PCE Price Index (YoY)</div><div class="card-value dim" id="val-pce">—<span class="card-unit">%</span></div><div class="card-sub" id="sub-pce">Fed's preferred gauge</div><div class="card-date" id="date-pce"></div><div class="threshold-bar"><div class="threshold-fill" id="fill-pce"></div></div></div>
+      </div>
     </div>
-    <button class="run-btn" onclick="runAlerts()">▶ Re-run Alert Check</button>
-  </div>
 
-  <footer>
-    <div>Live data via FRED® API — Federal Reserve Bank of St. Louis · <span id="footer-ts"></span></div>
-    <div style="display:flex;gap:8px;"><span class="source-tag" id="live-badge">○ NOT FETCHED</span><span class="source-tag">● DAY 1 BUILD</span></div>
-  </footer>
+    <!-- ============ PAGE: EXTENDED MACRO ============ -->
+    <div class="page" id="page-extended">
+      <p style="color:var(--muted);margin-bottom:16px;font-size:12px">16 additional FRED series across labor, growth, housing, money supply, and sentiment. Fetches alongside core data.</p>
+      <div id="extended-cards"><div class="alert info"><span>◎</span><span>Fetch data from Dashboard first to populate extended macro view.</span></div></div>
+    </div>
+
+    <!-- ============ PAGE: AI ANALYSIS ============ -->
+    <div class="page" id="page-ai">
+      <div class="ai-panel">
+        <div class="ai-header">
+          <h3>⬡ Claude Macro Analyst</h3>
+          <span style="font-size:10px;color:var(--muted)" id="ai-status">Ready</span>
+        </div>
+        <div class="ai-body">
+          <div class="ai-presets">
+            <button class="btn btn-ghost" onclick="aiPreset('regime')">Regime Check</button>
+            <button class="btn btn-ghost" onclick="aiPreset('risks')">Tail Risks</button>
+            <button class="btn btn-ghost" onclick="aiPreset('rates')">Rate Outlook</button>
+            <button class="btn btn-ghost" onclick="aiPreset('equities')">Equity Impact</button>
+            <button class="btn btn-ghost" onclick="aiPreset('historical')">Historical Analog</button>
+            <button class="btn btn-ghost" onclick="aiPreset('full')">Full Briefing</button>
+          </div>
+          <div class="ai-input-row">
+            <textarea class="ai-input" id="ai-question" rows="2" placeholder="Ask anything about the current macro environment…"></textarea>
+            <button class="btn btn-primary" id="ai-btn" onclick="runAI()">Analyze</button>
+          </div>
+          <div class="ai-output" id="ai-output"><span class="placeholder">Load data on Dashboard, then ask Claude for analysis. Preset buttons above for quick queries.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ PAGE: WEB INTEL ============ -->
+    <div class="page" id="page-search">
+      <div class="search-panel">
+        <div style="font-size:10px;color:var(--accent);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:12px">◎ Web Intelligence Search</div>
+        <p style="font-size:11px;color:var(--muted);margin-bottom:14px">Claude searches the live web for market-moving news, analysis, and data. Powered by Anthropic web search.</p>
+        <div class="ai-presets">
+          <button class="btn btn-ghost" onclick="searchPreset('fed')">Fed Policy Outlook</button>
+          <button class="btn btn-ghost" onclick="searchPreset('market')">Market Movers Today</button>
+          <button class="btn btn-ghost" onclick="searchPreset('earnings')">Earnings Surprises</button>
+          <button class="btn btn-ghost" onclick="searchPreset('global')">Global Macro Risks</button>
+        </div>
+        <div class="ai-input-row">
+          <textarea class="ai-input" id="search-query" rows="2" placeholder="What do you want to research?"></textarea>
+          <button class="btn btn-primary" id="search-btn" onclick="runSearch()">Search</button>
+        </div>
+        <div class="search-output" id="search-output"><span class="placeholder">Enter a query and Claude will search the web for real-time intel.</span></div>
+      </div>
+    </div>
+
+    <!-- ============ PAGE: CALENDAR ============ -->
+    <div class="page" id="page-calendar">
+      <div style="display:flex;gap:10px;margin-bottom:16px;">
+        <button class="btn btn-outline" onclick="loadCalendar()">↻ Refresh Calendar</button>
+      </div>
+      <div class="cal-list" id="cal-list"><div class="alert info"><span>◎</span><span>Loading calendar…</span></div></div>
+    </div>
+
+    <!-- ============ PAGE: NEWS ============ -->
+    <div class="page" id="page-news">
+      <div style="display:flex;gap:10px;margin-bottom:16px;">
+        <button class="btn btn-outline" onclick="loadNews()">↻ Refresh Feed</button>
+      </div>
+      <div class="news-list" id="news-list"><div class="alert info"><span>◎</span><span>Loading news…</span></div></div>
+    </div>
+
+    <!-- ============ PAGE: SETTINGS ============ -->
+    <div class="page" id="page-settings">
+      <div class="thresholds-panel">
+        <div style="font-size:10px;color:var(--accent);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:4px;">⚙ Alert Thresholds</div>
+        <div style="font-size:11px;color:var(--muted)">Triggers re-evaluate on each fetch.</div>
+        <div class="thresholds-grid">
+          <div class="thresh-item"><label>10Y Yield (%)</label><input type="number" id="t-10y" value="4.50" step="0.05"></div>
+          <div class="thresh-item"><label>2Y Yield (%)</label><input type="number" id="t-2y" value="4.00" step="0.05"></div>
+          <div class="thresh-item"><label>Spread Inversion (%)</label><input type="number" id="t-spread" value="0.00" step="0.05"></div>
+          <div class="thresh-item"><label>Headline CPI (%)</label><input type="number" id="t-cpi" value="3.00" step="0.1"></div>
+          <div class="thresh-item"><label>Core CPI (%)</label><input type="number" id="t-core" value="3.00" step="0.1"></div>
+          <div class="thresh-item"><label>Fed Funds (%)</label><input type="number" id="t-ffr" value="4.00" step="0.05"></div>
+        </div>
+        <button class="btn btn-outline" style="margin-top:14px" onclick="runAlerts()">▶ Re-run Alerts</button>
+      </div>
+    </div>
+
+    <footer>
+      <div>Macro Command Center · FRED® API · Anthropic Claude</div>
+      <div style="font-size:9px" id="footer-ts"></div>
+    </footer>
+  </div>
+</div>
+
+<!-- Mobile nav -->
+<div class="mobile-nav">
+  <div class="mob-item active" onclick="showPage('dashboard')"><span class="icon">◉</span>Dash</div>
+  <div class="mob-item" onclick="showPage('ai')"><span class="icon">⬡</span>AI</div>
+  <div class="mob-item" onclick="showPage('calendar')"><span class="icon">▦</span>Cal</div>
+  <div class="mob-item" onclick="showPage('news')"><span class="icon">▤</span>News</div>
+  <div class="mob-item" onclick="showPage('search')"><span class="icon">◎</span>Intel</div>
 </div>
 
 <script>
+/* ═══════════ STATE ═══════════ */
 const live = {};
+let extendedData = {};
 
-// Calls our Vercel serverless function at /api/fred
-// which proxies to FRED and adds CORS headers
+/* ═══════════ NAVIGATION ═══════════ */
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.mob-item').forEach(n => n.classList.remove('active'));
+  const page = document.getElementById('page-' + id);
+  if (page) page.classList.add('active');
+  // Highlight nav
+  document.querySelectorAll('.nav-item').forEach(n => { if (n.textContent.trim().toLowerCase().includes(id === 'ai' ? 'ai analysis' : id === 'search' ? 'web intel' : id)) n.classList.add('active'); });
+  document.querySelectorAll('.mob-item').forEach(n => { if (n.textContent.trim().toLowerCase().includes(id === 'dashboard' ? 'dash' : id === 'calendar' ? 'cal' : id === 'search' ? 'intel' : id)) n.classList.add('active'); });
+  const titles = { dashboard:'Dashboard', extended:'Extended Macro', ai:'AI Analysis', search:'Web Intelligence', calendar:'Fed / Data Calendar', news:'News Feed', settings:'Settings' };
+  document.getElementById('page-title').textContent = titles[id] || id;
+  // Auto-load calendar/news on first visit
+  if (id === 'calendar' && !document.querySelector('#cal-list .cal-item')) loadCalendar();
+  if (id === 'news' && !document.querySelector('#news-list .news-item')) loadNews();
+}
+
+/* ═══════════ FRED FETCH ═══════════ */
 async function fredFetch(seriesId, apiKey, limit = 2) {
-  const url = `/api/fred?series_id=${seriesId}&api_key=${apiKey}&sort_order=desc&limit=${limit}`;
-  const r = await fetch(url);
+  const r = await fetch(`/api/fred?series_id=${seriesId}&api_key=${apiKey}&sort_order=desc&limit=${limit}`);
   if (!r.ok) throw new Error(`HTTP ${r.status} for ${seriesId}`);
   const d = await r.json();
   if (d.error_message) throw new Error(d.error_message);
@@ -203,157 +392,296 @@ function calcYoY(obs) {
 
 async function fetchAll() {
   const apiKey = document.getElementById('api-key').value.trim();
-  if (!apiKey || apiKey.length < 20) { setStatus('⚠ Enter a valid FRED API key first.', true); return; }
-
+  if (!apiKey || apiKey.length < 20) { showAlert('warn', '⚠', 'Enter a valid FRED API key.'); return; }
   document.getElementById('fetch-btn').disabled = true;
-  document.getElementById('spinner').classList.add('active');
-  setStatus('Fetching live data from FRED…');
+  document.getElementById('fetch-btn').textContent = '⟳';
 
   try {
-    const [ffrObs, y2Obs, y5Obs, y10Obs, y30Obs, spreadObs, tipsObs, cpiObs, coreObs, pceObs] =
-      await Promise.all([
-        fredFetch('DFF',      apiKey, 2),
-        fredFetch('DGS2',     apiKey, 2),
-        fredFetch('DGS5',     apiKey, 2),
-        fredFetch('DGS10',    apiKey, 2),
-        fredFetch('DGS30',    apiKey, 2),
-        fredFetch('T10Y2Y',   apiKey, 2),
-        fredFetch('DFII10',   apiKey, 2),
-        fredFetch('CPIAUCSL', apiKey, 14),
-        fredFetch('CPILFESL', apiKey, 14),
-        fredFetch('PCEPI',    apiKey, 14),
-      ]);
+    const [ffrObs,y2Obs,y5Obs,y10Obs,y30Obs,spreadObs,tipsObs,cpiObs,coreObs,pceObs] = await Promise.all([
+      fredFetch('DFF',apiKey,2), fredFetch('DGS2',apiKey,2), fredFetch('DGS5',apiKey,2),
+      fredFetch('DGS10',apiKey,2), fredFetch('DGS30',apiKey,2), fredFetch('T10Y2Y',apiKey,2),
+      fredFetch('DFII10',apiKey,2), fredFetch('CPIAUCSL',apiKey,14), fredFetch('CPILFESL',apiKey,14),
+      fredFetch('PCEPI',apiKey,14)
+    ]);
 
-    live.ffr    = +ffrObs[0].value;    live.ffrDate = ffrObs[0].date;    live.ffrPrev = +ffrObs[1]?.value;
-    live.y2     = +y2Obs[0].value;     live.y2Date  = y2Obs[0].date;     live.y2Prev  = +y2Obs[1]?.value;
-    live.y5     = +y5Obs[0].value;     live.y5Prev  = +y5Obs[1]?.value;
-    live.y10    = +y10Obs[0].value;    live.y10Date = y10Obs[0].date;    live.y10Prev = +y10Obs[1]?.value;
-    live.y30    = +y30Obs[0].value;    live.y30Prev = +y30Obs[1]?.value;
-    live.spread = +spreadObs[0].value;
-    live.tips   = +tipsObs[0].value;
-    const cpiYoY  = calcYoY(cpiObs);
-    const coreYoY = calcYoY(coreObs);
-    const pceYoY  = calcYoY(pceObs);
-    live.cpi  = cpiYoY?.yoy  ?? null; live.cpiDate  = cpiYoY?.date;
-    live.core = coreYoY?.yoy ?? null; live.coreDate = coreYoY?.date;
-    live.pce  = pceYoY?.yoy  ?? null; live.pceDate  = pceYoY?.date;
+    live.ffr=+ffrObs[0].value; live.ffrDate=ffrObs[0].date; live.ffrPrev=+ffrObs[1]?.value;
+    live.y2=+y2Obs[0].value; live.y2Date=y2Obs[0].date; live.y2Prev=+y2Obs[1]?.value;
+    live.y5=+y5Obs[0].value; live.y5Prev=+y5Obs[1]?.value;
+    live.y10=+y10Obs[0].value; live.y10Date=y10Obs[0].date; live.y10Prev=+y10Obs[1]?.value;
+    live.y30=+y30Obs[0].value; live.y30Prev=+y30Obs[1]?.value;
+    live.spread=+spreadObs[0].value; live.tips=+tipsObs[0].value;
+    const cpiY=calcYoY(cpiObs), coreY=calcYoY(coreObs), pceY=calcYoY(pceObs);
+    live.cpi=cpiY?.yoy??null; live.cpiDate=cpiY?.date;
+    live.core=coreY?.yoy??null; live.coreDate=coreY?.date;
+    live.pce=pceY?.yoy??null; live.pceDate=pceY?.date;
 
     renderCards(); renderCurve(); runAlerts();
-
-    const now = new Date().toLocaleString('en-US', { month:'short', day:'numeric', year:'numeric', hour:'2-digit', minute:'2-digit' });
-    document.getElementById('ts').textContent = now;
+    const now = new Date().toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+    document.getElementById('ts-top').textContent = now;
     document.getElementById('footer-ts').textContent = now;
-    document.getElementById('live-indicator').textContent = '● LIVE';
-    document.getElementById('live-indicator').style.color = 'var(--ok)';
-    document.getElementById('live-badge').textContent = '● LIVE';
-    document.getElementById('live-badge').style.color = 'var(--ok)';
-    setStatus('✓ All 10 series loaded from FRED — ' + now);
+    document.getElementById('live-dot').className = 'dot live';
+    document.getElementById('live-label').textContent = 'LIVE';
+    document.getElementById('live-label').style.color = 'var(--ok)';
+
+    // Also fetch extended macro data
+    fetchExtended(apiKey);
   } catch(e) {
-    setStatus('✗ ' + e.message, true);
+    showAlert('danger', '✗', e.message);
   } finally {
     document.getElementById('fetch-btn').disabled = false;
-    document.getElementById('spinner').classList.remove('active');
+    document.getElementById('fetch-btn').textContent = '▶ Fetch';
   }
 }
 
-function setStatus(msg, err=false) {
-  const el = document.getElementById('status-msg');
-  el.textContent = msg; el.style.color = err ? 'var(--danger)' : 'var(--muted)';
+async function fetchExtended(apiKey) {
+  try {
+    const r = await fetch(`/api/macro?api_key=${apiKey}`);
+    const d = await r.json();
+    if (d.data) { extendedData = d.data; renderExtended(); }
+  } catch(e) { console.error('Extended fetch error:', e); }
 }
 
+/* ═══════════ RENDER ═══════════ */
 function renderCard(id, val, prev, date, min, max) {
   if (val == null || isNaN(val)) return;
   const el = document.getElementById(`val-${id}`);
   el.innerHTML = `${val.toFixed(2)}<span class="card-unit">%</span>`;
-  el.classList.remove('loading'); el.style.color = '#e8ecf2';
+  el.classList.remove('dim'); el.style.color = '#e8ecf2';
   if (prev != null && !isNaN(prev)) {
     const d = (val-prev).toFixed(2), cls = d>0?'up':d<0?'down':'flat', icon = d>0?'↑':d<0?'↓':'→';
     const sub = document.getElementById(`sub-${id}`);
-    if (sub) sub.innerHTML = `<span class="badge ${cls}">${icon} ${Math.abs(d)}</span> prev session`;
+    if (sub) sub.innerHTML = `<span class="badge ${cls}">${icon} ${Math.abs(d)}</span> vs prev`;
   }
   const dateEl = document.getElementById(`date-${id}`);
-  if (dateEl && date) dateEl.textContent = `as of ${date}`;
+  if (dateEl && date) dateEl.textContent = date;
   const pct = Math.min(100, Math.max(0, ((val-min)/(max-min))*100));
   const fill = document.getElementById(`fill-${id}`);
-  if (fill) { fill.style.width = pct+'%'; fill.style.background = pct>75?'var(--danger)':pct>50?'var(--warn)':'var(--ok)'; }
+  if (fill) { fill.style.width=pct+'%'; fill.style.background=pct>75?'var(--danger)':pct>50?'var(--warn)':'var(--ok)'; }
   const dot = document.getElementById(`dot-${id}`);
-  if (dot) dot.className = 'status-dot '+(pct>75?'danger':pct>50?'warn':'ok');
+  if (dot) dot.className = 'dot-status '+(pct>75?'danger':pct>50?'warn':'ok');
 }
 
 function renderCards() {
-  renderCard('ffr', live.ffr, live.ffrPrev, live.ffrDate, 0, 8);
-  renderCard('2y',  live.y2,  live.y2Prev,  live.y2Date,  0, 7);
-  renderCard('10y', live.y10, live.y10Prev, live.y10Date, 0, 7);
-  renderCard('5y',  live.y5,  live.y5Prev,  null,         0, 7);
-  renderCard('30y', live.y30, live.y30Prev, null,         0, 7);
-  renderCard('tips',live.tips,null,         null,         0, 4);
-
-  if (live.spread != null) {
-    const inv = live.spread < 0;
-    const el = document.getElementById('val-spread');
-    el.innerHTML = `${live.spread.toFixed(2)}<span class="card-unit">%</span>`;
-    el.classList.remove('loading'); el.style.color = inv ? 'var(--danger)' : '#e8ecf2';
-    const sub = document.getElementById('sub-spread');
-    if (sub) sub.innerHTML = inv ? `<span class="badge down">⚠ INVERTED</span>` : `<span class="badge ok">● NORMAL</span>`;
-    const dot = document.getElementById('dot-spread');
-    if (dot) dot.className = 'status-dot '+(inv?'danger':'ok');
-    const fill = document.getElementById('fill-spread');
-    if (fill) { const p = Math.min(100,Math.max(0,((live.spread+2)/4)*100)); fill.style.width=p+'%'; fill.style.background=inv?'var(--danger)':'var(--ok)'; }
+  renderCard('ffr',live.ffr,live.ffrPrev,live.ffrDate,0,8);
+  renderCard('2y',live.y2,live.y2Prev,live.y2Date,0,7);
+  renderCard('10y',live.y10,live.y10Prev,live.y10Date,0,7);
+  renderCard('5y',live.y5,live.y5Prev,null,0,7);
+  renderCard('30y',live.y30,live.y30Prev,null,0,7);
+  renderCard('tips',live.tips,null,null,0,4);
+  if (live.spread!=null) {
+    const inv=live.spread<0, el=document.getElementById('val-spread');
+    el.innerHTML=`${live.spread.toFixed(2)}<span class="card-unit">%</span>`;
+    el.classList.remove('dim'); el.style.color=inv?'var(--danger)':'#e8ecf2';
+    document.getElementById('sub-spread').innerHTML=inv?'<span class="badge down">⚠ INVERTED</span>':'<span class="badge ok">● Normal</span>';
+    document.getElementById('dot-spread').className='dot-status '+(inv?'danger':'ok');
+    const fill=document.getElementById('fill-spread'); if(fill){const p=Math.min(100,Math.max(0,((live.spread+2)/4)*100)); fill.style.width=p+'%'; fill.style.background=inv?'var(--danger)':'var(--ok)';}
   }
-
-  [['cpi',live.cpi,live.cpiDate],['core',live.core,live.coreDate],['pce',live.pce,live.pceDate]].forEach(([id,val,date]) => {
-    if (val==null) return;
-    const el = document.getElementById(`val-${id}`);
-    el.innerHTML = `${val.toFixed(1)}<span class="card-unit">%</span>`;
-    el.classList.remove('loading'); el.style.color='#e8ecf2';
-    const pct = Math.min(100,(val/6)*100);
-    const fill = document.getElementById(`fill-${id}`);
-    if (fill) { fill.style.width=pct+'%'; fill.style.background=val>3?'var(--danger)':val>2.5?'var(--warn)':'var(--ok)'; }
-    const dot = document.getElementById(`dot-${id}`);
-    if (dot) dot.className='status-dot '+(val>3?'danger':val>2.5?'warn':'ok');
-    const sub = document.getElementById(`sub-${id}`);
-    if (sub) sub.innerHTML=`<span class="badge ${val>2.5?'warn':'ok'}">${val>2?'↑ Above 2% target':'✓ Near target'}</span>`;
-    const dateEl = document.getElementById(`date-${id}`);
-    if (dateEl&&date) dateEl.textContent=`as of ${date}`;
+  [['cpi',live.cpi,live.cpiDate],['core',live.core,live.coreDate],['pce',live.pce,live.pceDate]].forEach(([id,val,date])=>{
+    if(val==null)return;
+    const el=document.getElementById(`val-${id}`);
+    el.innerHTML=`${val.toFixed(1)}<span class="card-unit">%</span>`;
+    el.classList.remove('dim'); el.style.color='#e8ecf2';
+    const pct=Math.min(100,(val/6)*100);
+    const fill=document.getElementById(`fill-${id}`); if(fill){fill.style.width=pct+'%'; fill.style.background=val>3?'var(--danger)':val>2.5?'var(--warn)':'var(--ok)';}
+    document.getElementById(`dot-${id}`).className='dot-status '+(val>3?'danger':val>2.5?'warn':'ok');
+    document.getElementById(`sub-${id}`).innerHTML=`<span class="badge ${val>2.5?'warn':'ok'}">${val>2?'↑ Above 2%':'✓ Near target'}</span>`;
+    const de=document.getElementById(`date-${id}`); if(de&&date) de.textContent=date;
   });
 }
 
 function renderCurve() {
-  const pts = [{l:'2Y',v:live.y2},{l:'5Y',v:live.y5},{l:'10Y',v:live.y10},{l:'30Y',v:live.y30}].filter(p=>p.v!=null);
-  if (!pts.length) return;
-  const inv = live.spread < 0;
-  document.getElementById('curve-status').innerHTML = inv
-    ? `<span style="color:var(--danger)">⚠ INVERTED — Spread: ${live.spread?.toFixed(2)}%</span>`
-    : `<span class="badge ok">● Normal — Spread: ${live.spread?.toFixed(2)}%</span>`;
-  document.getElementById('curve-note').textContent = inv
-    ? 'Warning: Yield curve inverted. Historically precedes recession by 12–24 months.'
-    : 'Curve positively sloped. Monitor for compression toward inversion.';
+  const pts=[{l:'2Y',v:live.y2},{l:'5Y',v:live.y5},{l:'10Y',v:live.y10},{l:'30Y',v:live.y30}].filter(p=>p.v!=null);
+  if(!pts.length) return;
+  const inv=live.spread<0;
+  document.getElementById('curve-status').innerHTML=inv?`<span style="color:var(--danger)">⚠ INVERTED ${live.spread?.toFixed(2)}%</span>`:`<span class="badge ok">Normal ${live.spread?.toFixed(2)}%</span>`;
+  document.getElementById('curve-note').textContent=inv?'Yield curve inverted — historically precedes recession 12–24mo.':'Curve positively sloped. Monitor for compression.';
   const vals=pts.map(p=>p.v), mn=Math.min(...vals), mx=Math.max(...vals), rng=mx-mn||0.1;
   const chart=document.getElementById('curve-chart'); chart.innerHTML='';
-  pts.forEach(p => {
+  pts.forEach(p=>{
     const h=((p.v-mn)/rng)*70+20, c=inv?'var(--danger)':p.v>4?'var(--warn)':'var(--accent)';
     chart.innerHTML+=`<div class="curve-bar-wrap"><div class="curve-bar-val">${p.v.toFixed(2)}</div><div class="curve-bar" style="height:${h}%;background:${c}"></div><div class="curve-bar-label" style="color:${c}">${p.l}</div></div>`;
   });
 }
 
-function runAlerts() {
-  if (!live.ffr) { document.getElementById('alerts').innerHTML<`<div class="alert info"><span>◎</span><span>Fetch live data to run threshold alerts.</span></div>`; return; }
-  const t={y10:+document.getElementById('t-10y').value,y2:+document.getElementById('t-2y').value,spr:+document.getElementById('t-spread').value,cpi:+document.getElementById('t-cpi').value,cor:+document.getElementById('t-core').value,ffr:+document.getElementById('t-ffr').value};
-  const alerts=[];
-  const chk=(val,thr,name,aboveMsg,clearMsg)=>{
-    if(val==null)return;
-    alerts.push(val>=thr?{type:'warn',icon:'⚠',msg:`${name} (${val.toFixed(2)}%) hit alert of ${thr}%. ${aboveMsg}`}:{type:'ok',icon:'✓',msg:`${name} clear — ${val.toFixed(2)}% vs threshold ${thr}%. ${clearMsg}`});
-  };
-  chk(live.y10,t.y10,'10Y Treasury','Watch long-end rate pressure.','Long-end rates contained.');
-  chk(live.y2,t.y2,'2Y Treasury','Short end pricing tight policy.','Short rates below alert.');
-  chk(live.cpi,t.cpi,'Headline CPI','Inflation above target — rate cuts less likely.','Trending toward 2% target.');
-  chk(live.core,t.cor,'Core CPI','Services inflation sticky.','Core inflation contained.');
-  chk(live.ffr,t.ffr,'Fed Funds','High policy rate — financing costs elevated.','Policy rate within comfort range.');
-  if(live.spread!=null) alerts.push(live.spread<=t.spr?{type:'danger',icon:'🔴',msg:`INVERSION ALERT — 10Y–2Y spread is ${live.spread.toFixed(2)}%. Recession signal watch.`}:{type:'ok',icon:'✓',msg:`Yield curve spread (${live.spread.toFixed(2)}%) positive — sho inversion.`});
-  document.getElementById('alerts').innerHTML=alerts.map((a,i)=>`<div class="alert ${a.type}" style="animation-delay:${i*0.06}s"><span>${a.icon}</span><span>${a.msg}</span></div>`).join('');
+function renderExtended() {
+  const cats = { labor:'Labor Market', growth:'Growth & Activity', housing:'Housing', money:'Money & Credit', sentiment:'Sentiment', manufacturing:'Manufacturing' };
+  const container = document.getElementById('extended-cards');
+  let html = '';
+  Object.entries(cats).forEach(([catKey, catName]) => {
+    const items = Object.values(extendedData).filter(d => d.cat === catKey);
+    if (!items.length) return;
+    html += `<div class="macro-cat-title">${catName}</div><div class="cards c3">`;
+    items.forEach(item => {
+      const chg = item.prev != null ? (item.value - item.prev) : null;
+      const chgStr = chg != null ? `<span class="badge ${chg>0?'up':chg<0?'down':'flat'}">${chg>0?'↑':'↓'} ${Math.abs(chg).toFixed(2)}</span>` : '';
+      const fmtVal = item.unit === '%' ? item.value.toFixed(2) : item.unit === '$T' ? (item.value/1000).toFixed(2) : item.unit === '$B' ? item.value.toFixed(0) : item.unit === 'K' ? item.value.toFixed(0) : item.value.toFixed(1);
+      html += `<div class="card"><div class="card-label">${item.name}</div><div class="card-value">${fmtVal}<span class="card-unit">${item.unit}</span></div><div class="card-sub">${chgStr}</div><div class="card-date">${item.date||''}</div></div>`;
+    });
+    html += '</div>';
+  });
+  container.innerHTML = html || '<div class="alert info"><span>◎</span><span>No extended data loaded yet.</span></div>';
 }
 
+/* ═══════════ ALERTS ═══════════ */
+function showAlert(type, icon, msg) {
+  document.getElementById('alerts').innerHTML = `<div class="alert ${type}"><span>${icon}</span><span>${msg}</span></div>`;
+}
+
+function runAlerts() {
+  if (!live.ffr && live.ffr !== 0) return;
+  const t={y10:+document.getElementById('t-10y').value,y2:+document.getElementById('t-2y').value,spr:+document.getElementById('t-spread').value,cpi:+document.getElementById('t-cpi').value,cor:+document.getElementById('t-core').value,ffr:+document.getElementById('t-ffr').value};
+  const alerts=[];
+  const chk=(val,thr,name,aboveMsg,clearMsg)=>{if(val==null)return;alerts.push(val>=thr?{type:'warn',icon:'⚠',msg:`${name} (${val.toFixed(2)}%) ≥ ${thr}%. ${aboveMsg}`}:{type:'ok',icon:'✓',msg:`${name} ${val.toFixed(2)}% < ${thr}%. ${clearMsg}`});};
+  chk(live.y10,t.y10,'10Y','Long-end pressure.','Contained.');
+  chk(live.y2,t.y2,'2Y','Short end tight.','Below alert.');
+  chk(live.cpi,t.cpi,'CPI','Above target.','Trending down.');
+  chk(live.core,t.cor,'Core CPI','Sticky.','Contained.');
+  chk(live.ffr,t.ffr,'Fed Funds','Policy tight.','Comfort range.');
+  if(live.spread!=null) alerts.push(live.spread<=t.spr?{type:'danger',icon:'🔴',msg:`INVERSION — 10Y–2Y ${live.spread.toFixed(2)}%. Recession watch.`}:{type:'ok',icon:'✓',msg:`Curve spread ${live.spread.toFixed(2)}% positive.`});
+  document.getElementById('alerts').innerHTML=alerts.map((a,i)=>`<div class="alert ${a.type}" style="animation-delay:${i*0.05}s"><span>${a.icon}</span><span>${a.msg}</span></div>`).join('');
+}
+
+/* ═══════════ AI ANALYSIS ═══════════ */
+function aiPreset(type) {
+  const presets = {
+    regime: 'What macro regime are we in right now? Expansion, late-cycle, or early contraction? Reference the data.',
+    risks: 'What are the top 3 tail risks and most likely black swan events given current macro conditions?',
+    rates: 'Based on current inflation, employment, and yield data — where are rates likely headed in the next 3-6 months?',
+    equities: 'Given the current macro backdrop, what are the implications for equities? Which sectors benefit or suffer?',
+    historical: 'What historical period most closely resembles current macro conditions? What happened next in that analog?',
+    full: 'Give me a full macro briefing: regime, risks, rate outlook, equity implications, and what to watch this week.'
+  };
+  document.getElementById('ai-question').value = presets[type] || '';
+}
+
+async function runAI() {
+  if (!live.ffr && live.ffr !== 0) { document.getElementById('ai-output').innerHTML='<span class="placeholder">⚠ Fetch data on Dashboard first — AI needs live macro data to analyze.</span>'; return; }
+  const question = document.getElementById('ai-question').value.trim();
+  const btn = document.getElementById('ai-btn');
+  const output = document.getElementById('ai-output');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner-sm"></span>';
+  output.innerHTML = '<span style="color:var(--muted)">Analyzing macro environment…</span>';
+  document.getElementById('ai-status').textContent = 'Thinking…';
+
+  const macroData = {
+    rates: { fedFunds: live.ffr, treasury2Y: live.y2, treasury5Y: live.y5, treasury10Y: live.y10, treasury30Y: live.y30, spread10Y2Y: live.spread, tips10Y: live.tips },
+    inflation: { headlineCPI_YoY: live.cpi, coreCPI_YoY: live.core, PCE_YoY: live.pce },
+    dates: { ffrDate: live.ffrDate, y10Date: live.y10Date, cpiDate: live.cpiDate },
+    extended: extendedData
+  };
+
+  try {
+    const r = await fetch('/api/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ macroData, question })
+    });
+    const d = await r.json();
+    if (d.error) throw new Error(d.error);
+    output.textContent = d.analysis;
+    document.getElementById('ai-status').textContent = 'Complete';
+  } catch(e) {
+    output.innerHTML = `<span style="color:var(--danger)">Error: ${e.message}</span>`;
+    document.getElementById('ai-status').textContent = 'Error';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Analyze';
+  }
+}
+
+/* ═══════════ WEB SEARCH ═══════════ */
+function searchPreset(type) {
+  const presets = {
+    fed: 'What is the latest Federal Reserve policy outlook and when is the next expected rate decision? Include any recent Fed speaker comments.',
+    market: 'What are the biggest market-moving events and developments today? Cover equities, bonds, commodities.',
+    earnings: 'What are the most notable earnings reports this week? Any major surprises or guidance changes?',
+    global: 'What are the biggest global macro risks right now? Cover geopolitics, trade, central bank divergence, and emerging market stress.'
+  };
+  document.getElementById('search-query').value = presets[type] || '';
+}
+
+async function runSearch() {
+  const query = document.getElementById('search-query').value.trim();
+  if (!query) return;
+  const btn = document.getElementById('search-btn');
+  const output = document.getElementById('search-output');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner-sm"></span>';
+  output.innerHTML = '<span style="color:var(--muted)">Searching the web…</span>';
+
+  try {
+    const r = await fetch('/api/search', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query })
+    });
+    const d = await r.json();
+    if (d.error) throw new Error(d.error);
+    output.textContent = d.result;
+  } catch(e) {
+    output.innerHTML = `<span style="color:var(--danger)">Error: ${e.message}</span>`;
+  } finally {
+    btn.disabled = false; btn.textContent = 'Search';
+  }
+}
+
+/* ═══════════ CALENDAR ═══════════ */
+async function loadCalendar() {
+  const container = document.getElementById('cal-list');
+  container.innerHTML = '<div style="color:var(--muted);font-size:11px"><span class="spinner-sm"></span> Loading…</div>';
+  try {
+    const r = await fetch('/api/calendar');
+    const d = await r.json();
+    if (!d.events || !d.events.length) { container.innerHTML = '<div class="alert info"><span>◎</span><span>No upcoming events.</span></div>'; return; }
+    container.innerHTML = d.events.map(ev => {
+      const dt = new Date(ev.date + 'T12:00:00');
+      const day = dt.getDate();
+      const mon = dt.toLocaleString('en-US',{month:'short'});
+      const isFed = ev.category === 'fed';
+      const cls = ev.daysAway === 0 ? 'today' : ev.isPast ? 'past' : '';
+      const countdown = ev.daysAway === 0 ? '<span style="color:var(--accent)">TODAY</span>' : ev.daysAway < 0 ? `<span style="color:var(--muted)">${Math.abs(ev.daysAway)}d ago</span>` : ev.daysAway <= 7 ? `<span style="color:var(--warn)">${ev.daysAway}d</span>` : `<span style="color:var(--muted)">${ev.daysAway}d</span>`;
+      return `<div class="cal-item ${cls}">
+        <div class="cal-date"><div class="day">${day}</div><div class="month">${mon}</div></div>
+        <div class="cal-info"><div class="type">${isFed?'🏛 ':'📊 '}${ev.type}</div><div class="desc">${ev.desc}</div></div>
+        <div class="cal-countdown">${countdown}</div>
+        <span class="badge ${isFed?'purple':'info'}" style="font-size:9px">${ev.category.toUpperCase()}</span>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    container.innerHTML = `<div class="alert danger"><span>✗</span><span>${e.message}</span></div>`;
+  }
+}
+
+/* ═══════════ NEWS ═══════════ */
+async function loadNews() {
+  const container = document.getElementById('news-list');
+  container.innerHTML = '<div style="color:var(--muted);font-size:11px"><span class="spinner-sm"></span> Fetching feeds…</div>';
+  try {
+    const r = await fetch('/api/news');
+    const d = await r.json();
+    if (!d.articles || !d.articles.length) { container.innerHTML = '<div class="alert info"><span>◎</span><span>No articles found.</span></div>'; return; }
+    container.innerHTML = d.articles.map(a => {
+      const ago = a.date ? timeAgo(new Date(a.date)) : '';
+      return `<div class="news-item">
+        <div class="headline"><a href="${a.link}" target="_blank" rel="noopener">${a.title}</a></div>
+        <div class="meta"><span class="source-tag">${a.source}</span><span>${ago}</span></div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    container.innerHTML = `<div class="alert danger"><span>✗</span><span>${e.message}</span></div>`;
+  }
+}
+
+function timeAgo(date) {
+  const s = Math.floor((Date.now() - date) / 1000);
+  if (s < 60) return 'just now';
+  if (s < 3600) return Math.floor(s/60) + 'm ago';
+  if (s < 86400) return Math.floor(s/3600) + 'h ago';
+  return Math.floor(s/86400) + 'd ago';
+}
+
+/* ═══════════ INIT ═══════════ */
 document.getElementById('api-key').addEventListener('keydown', e => { if(e.key==='Enter') fetchAll(); });
+document.getElementById('ai-question').addEventListener('keydown', e => { if(e.key==='Enter' && !e.shiftKey) { e.preventDefault(); runAI(); }});
+document.getElementById('search-query').addEventListener('keydown', e => { if(e.key==='Enter' && !e.shiftKey) { e.preventDefault(); runSearch(); }});
 </script>
 </body>
 </html>
