@@ -850,39 +850,49 @@ function escHtml(str) {
 
 async function aiSentiment(symbol, bullPct, bearPct) {
   const aiBox = document.getElementById('sent-ai');
-  aiBox.innerHTML = `<div class="ai-panel"><div class="ai-header"><h3>⬡ Trade Evaluation: $${symbol}</h3><span style="font-size:10px;color:var(--muted)" id="sent-ai-status">Searching web + analyzing…</span></div><div class="ai-body"><div class="ai-output" id="sent-ai-output"><span style="color:var(--muted)"><span class="spinner-sm"></span> Claude is searching for $${symbol} price, fundamentals, news, and analyst data…</span></div></div></div>`;
+  aiBox.innerHTML = `<div class="ai-panel"><div class="ai-header"><h3>⬡ Trade Evaluation: $${symbol}</h3><span style="font-size:10px;color:var(--muted)" id="sent-ai-status">Searching web + analyzing… (15-20s)</span></div><div class="ai-body"><div class="ai-output" id="sent-ai-output"><span style="color:var(--muted)"><span class="spinner-sm"></span> Claude is searching for $${symbol} price, fundamentals, news, and analyst data…</span></div></div></div>`;
 
   const macroCtx = live.ffr != null ? `Current macro backdrop: Fed Funds ${live.ffr}%, 10Y yield ${live.y10}%, 2Y yield ${live.y2}%, 10Y-2Y spread ${live.spread}%, CPI ${live.cpi}%, Core CPI ${live.core}%, PCE ${live.pce}%.` : 'No macro data loaded yet.';
 
-  const query = `Search for the current stock price, recent performance, key fundamentals (P/E, market cap, revenue growth), latest analyst ratings/price targets, recent news, AND broader web sentiment (what are financial blogs, Twitter/X finance accounts, Reddit, and analysts saying about this stock right now — bullish or bearish?) for $${symbol} (ticker: ${symbol}).
+  const query = `You are an aggressive equity research analyst. Your job is to give a DECISIVE trade recommendation. Never say "needs more context" or "insufficient data" — work with what you find and commit to a view.
+
+First, search the web thoroughly for $${symbol} (ticker: ${symbol}). Search for:
+- "${symbol} stock price today"
+- "${symbol} stock analyst rating price target"  
+- "${symbol} stock news this week"
+- "${symbol} earnings revenue growth"
 
 CONTEXT: Retail traders on StockTwits are currently ${bullPct}% bullish and ${bearPct}% bearish on $${symbol}.
 MACRO: ${macroCtx}
 
-Structure your response in these sections:
+After searching, structure your response EXACTLY in these sections:
 
 📊 LIVE DATA SNAPSHOT
-- Current price and recent performance (1D, 1W, 1M, YTD)
-- Key fundamentals: P/E, market cap, revenue/earnings growth
-- Analyst consensus: rating, average price target, bull/bear targets
+- Current/recent price and performance (1D, 1W, 1M, YTD — use whatever you find)
+- Key fundamentals: P/E, market cap, revenue/earnings growth, margins
+- Analyst consensus: rating, average price target, high/low targets
 
 📰 RECENT CATALYSTS
-- What news or events are driving the stock right now
-- Any upcoming earnings, FDA decisions, product launches, etc.
+- What news or events are driving this stock right now
+- Upcoming catalysts: earnings dates, product launches, regulatory events
 
 🌐 WEB SENTIMENT PULSE
-- What is the overall sentiment across financial media, social platforms, and analyst commentary?
-- Are institutional/smart money voices aligned with or diverging from StockTwits retail sentiment (${bullPct}% bull)?
-- Flag any notable contrarian takes or red flags you find
+- What are analysts, financial media, and social platforms saying?
+- How does institutional/smart money sentiment compare to the ${bullPct}% bullish StockTwits retail crowd?
+- Any notable contrarian takes?
 
-🧠 CLAUDE'S TRADE ASSESSMENT
-- Given ALL of the above (price action, fundamentals, analyst targets, web sentiment, retail sentiment, macro backdrop):
-- What is YOUR suggested positioning? Be specific: long, short, or stay away. Include timeframe (swing trade, position trade, avoid).
-- Entry zone, target, and stop loss levels if applicable
-- Confidence level: high conviction, moderate, or low conviction — and why
-- Key risk: what would make this trade blow up?
+🧠 CLAUDE'S TRADE CALL
+You MUST pick a direction. No hedging. No "it depends."
+- VERDICT: LONG / SHORT / AVOID — pick one
+- Timeframe: day trade / swing (1-2 weeks) / position (1-3 months)
+- Entry zone: specific price range
+- Target: specific price
+- Stop loss: specific price
+- Confidence: HIGH / MODERATE / LOW
+- Thesis in 2 sentences
+- #1 risk that kills this trade
 
-Be direct and opinionated. Take a stance. Reference actual numbers from your search. This is for research purposes only, not financial advice.`;
+Use real numbers from your search. Be bold. This is research only, not financial advice.`;
 
   try {
     const r = await fetch('/api/search', {
