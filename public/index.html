@@ -157,6 +157,27 @@ body::before { content:''; position:fixed; inset:0; background-image: linear-gra
 .search-panel { background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:20px; }
 .search-output { background:var(--bg); border:1px solid var(--border); border-radius:4px; padding:16px; min-height:150px; font-size:12px; line-height:1.7; color:var(--text); white-space:pre-wrap; overflow-y:auto; max-height:400px; margin-top:14px; }
 
+/* Market Pulse */
+.pulse-strip { display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap; }
+.pulse-hero { flex:1; min-width:180px; background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:16px 20px; position:relative; overflow:hidden; }
+.pulse-hero::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
+.pulse-hero.vix::before { background:linear-gradient(90deg,var(--warn),var(--danger)); }
+.pulse-hero.cape::before { background:linear-gradient(90deg,var(--purple),var(--accent2)); }
+.pulse-hero .pulse-label { font-size:9px; letter-spacing:0.18em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+.pulse-hero .pulse-val { font-size:36px; font-weight:600; line-height:1; letter-spacing:-0.04em; }
+.pulse-hero .pulse-sub { font-size:11px; color:var(--muted); margin-top:6px; }
+.pulse-hero .pulse-zone { display:inline-block; font-size:10px; font-weight:600; padding:2px 8px; border-radius:2px; margin-top:8px; }
+.pulse-zone.low { background:rgba(76,175,125,0.15); color:var(--ok); }
+.pulse-zone.mid { background:rgba(245,166,35,0.15); color:var(--warn); }
+.pulse-zone.high { background:rgba(224,92,92,0.15); color:var(--danger); }
+.pulse-zone.extreme { background:rgba(224,92,92,0.25); color:#ff6b6b; }
+.tv-widgets { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:20px; }
+.tv-widget-box { background:var(--surface); border:1px solid var(--border); border-radius:6px; overflow:hidden; height:220px; }
+@media(max-width:768px) {
+  .tv-widgets { grid-template-columns:1fr 1fr; }
+  .pulse-hero .pulse-val { font-size:28px; }
+}
+
 /* Macro extended cards */
 .macro-cat-title { font-size:11px; color:var(--accent); letter-spacing:0.12em; text-transform:uppercase; margin:20px 0 8px; }
 
@@ -221,6 +242,32 @@ footer { margin-top:32px; padding:16px 0; border-top:1px solid var(--border); fo
       </div>
 
       <div class="alerts" id="alerts"><div class="alert info"><span>◎</span><span>Enter FRED key and fetch to load live data.</span></div></div>
+
+      <!-- MARKET PULSE -->
+      <div class="section-label">Market Pulse <span class="src-tag">LIVE</span></div>
+      <div class="pulse-strip">
+        <div class="pulse-hero vix">
+          <div class="pulse-label">CBOE Volatility Index</div>
+          <div class="pulse-val" id="vix-val" style="color:var(--warn)">—</div>
+          <div class="pulse-sub" id="vix-sub">VIX · Fear gauge</div>
+          <div class="pulse-zone mid" id="vix-zone">LOADING</div>
+        </div>
+        <div class="pulse-hero cape">
+          <div class="pulse-label">Shiller PE Ratio (CAPE)</div>
+          <div class="pulse-val" id="cape-val" style="color:var(--purple)">—</div>
+          <div class="pulse-sub" id="cape-sub">Cyclically adjusted P/E · S&P 500</div>
+          <div class="pulse-zone mid" id="cape-zone">LOADING</div>
+        </div>
+      </div>
+
+      <!-- TradingView Mini Charts -->
+      <div class="section-label">US Equities <span class="src-tag">TradingView</span></div>
+      <div class="tv-widgets">
+        <div class="tv-widget-box" id="tv-sp500"></div>
+        <div class="tv-widget-box" id="tv-nasdaq"></div>
+        <div class="tv-widget-box" id="tv-dow"></div>
+        <div class="tv-widget-box" id="tv-russell"></div>
+      </div>
 
       <div class="section-label">Policy & Lending Rates</div>
       <div class="cards c3">
@@ -425,6 +472,9 @@ async function fetchAll() {
 
     // Also fetch extended macro data
     fetchExtended(apiKey);
+    // Load VIX and CAPE
+    loadVIX();
+    loadCAPE();
   } catch(e) {
     showAlert('danger', '✗', e.message);
   } finally {
@@ -677,6 +727,94 @@ function timeAgo(date) {
   if (s < 86400) return Math.floor(s/3600) + 'h ago';
   return Math.floor(s/86400) + 'd ago';
 }
+
+/* ═══════════ MARKET PULSE ═══════════ */
+function loadTradingViewWidgets() {
+  const symbols = [
+    { id: 'tv-sp500', symbol: 'OANDA:SPX500USD', name: 'S&P 500' },
+    { id: 'tv-nasdaq', symbol: 'OANDA:NAS100USD', name: 'Nasdaq 100' },
+    { id: 'tv-dow', symbol: 'OANDA:US30USD', name: 'Dow 30' },
+    { id: 'tv-russell', symbol: 'OANDA:US2000USD', name: 'Russell 2000' },
+  ];
+  symbols.forEach(s => {
+    const container = document.getElementById(s.id);
+    if (!container) return;
+    container.innerHTML = '';
+    const w = document.createElement('div');
+    w.className = 'tradingview-widget-container';
+    w.style.height = '100%';
+    w.innerHTML = '<div class="tradingview-widget-container__widget" style="height:100%"></div>';
+    container.appendChild(w);
+    const script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js';
+    script.async = true;
+    script.textContent = JSON.stringify({
+      symbol: s.symbol,
+      width: '100%',
+      height: '100%',
+      locale: 'en',
+      dateRange: '1D',
+      colorTheme: 'dark',
+      isTransparent: true,
+      autosize: true,
+      largeChartUrl: '',
+      noTimeScale: false,
+      chartOnly: false
+    });
+    w.appendChild(script);
+  });
+}
+
+async function loadVIX() {
+  const apiKey = document.getElementById('api-key').value.trim();
+  if (!apiKey) return;
+  try {
+    const obs = await fredFetch('VIXCLS', apiKey, 2);
+    if (obs.length) {
+      const val = +obs[0].value;
+      const prev = obs[1] ? +obs[1].value : null;
+      document.getElementById('vix-val').textContent = val.toFixed(2);
+      const zone = val < 15 ? ['low','LOW · Complacent'] : val < 20 ? ['low','NORMAL · Calm'] : val < 25 ? ['mid','ELEVATED · Caution'] : val < 30 ? ['high','HIGH · Fear'] : ['extreme','EXTREME · Panic'];
+      const zoneEl = document.getElementById('vix-zone');
+      zoneEl.className = 'pulse-zone ' + zone[0];
+      zoneEl.textContent = zone[1];
+      document.getElementById('vix-val').style.color = val < 20 ? 'var(--ok)' : val < 25 ? 'var(--warn)' : 'var(--danger)';
+      if (prev != null) {
+        const chg = val - prev;
+        document.getElementById('vix-sub').innerHTML = `VIX · <span class="badge ${chg>0?'up':'down'}">${chg>0?'↑':'↓'} ${Math.abs(chg).toFixed(2)}</span> vs prev · ${obs[0].date}`;
+      }
+    }
+  } catch(e) { console.error('VIX fetch error:', e); }
+}
+
+async function loadCAPE() {
+  const apiKey = document.getElementById('api-key').value.trim();
+  if (!apiKey) return;
+  try {
+    // Shiller PE from Multpl via our proxy, or fallback to manual
+    const obs = await fredFetch('CAPE10', apiKey, 2).catch(() => null);
+    if (obs && obs.length) {
+      const val = +obs[0].value;
+      document.getElementById('cape-val').textContent = val.toFixed(1);
+      const zone = val < 15 ? ['low','CHEAP · Below avg'] : val < 20 ? ['low','FAIR VALUE'] : val < 25 ? ['mid','ABOVE AVG'] : val < 30 ? ['mid','ELEVATED'] : val < 35 ? ['high','EXPENSIVE'] : ['extreme','EXTREME · 95th %ile'];
+      const zoneEl = document.getElementById('cape-zone');
+      zoneEl.className = 'pulse-zone ' + zone[0];
+      zoneEl.textContent = zone[1];
+      document.getElementById('cape-val').style.color = val < 20 ? 'var(--ok)' : val < 30 ? 'var(--purple)' : 'var(--danger)';
+      document.getElementById('cape-sub').innerHTML = `CAPE · S&P 500 · ${obs[0].date} · Median ~16`;
+    } else {
+      // CAPE10 may not exist on FRED — show note
+      document.getElementById('cape-val').textContent = '—';
+      document.getElementById('cape-zone').textContent = 'FRED N/A';
+      document.getElementById('cape-zone').className = 'pulse-zone mid';
+      document.getElementById('cape-sub').innerHTML = 'Shiller PE not on FRED — will add alt source';
+    }
+  } catch(e) { console.error('CAPE fetch error:', e); }
+}
+
+// Load TradingView widgets on page load
+loadTradingViewWidgets();
 
 /* ═══════════ INIT ═══════════ */
 document.getElementById('api-key').addEventListener('keydown', e => { if(e.key==='Enter') fetchAll(); });
