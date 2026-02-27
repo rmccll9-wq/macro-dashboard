@@ -8,6 +8,8 @@
     { "source": "/api/calendar", "destination": "/api/calendar" },
     { "source": "/api/macro", "destination": "/api/macro" },
     { "source": "/api/cape", "destination": "/api/cape" },
-    { "source": "/api/sentiment", "destination": "/api/sentiment" }
+    { "source": "/api/sentiment", "destination": "/api/sentiment" },
+    { "source": "/api/earnings", "destination": "/api/earnings" },
+    { "source": "/api/feargreed", "destination": "/api/feargreed" }
   ]
 }

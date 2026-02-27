@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Macro Command Center</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
 :root {
   --bg: #0a0c0f; --surface: #111318; --surface2: #161922; --border: #1e2129; --border-lit: #2d3140;
@@ -206,6 +207,58 @@ body::before { content:''; position:fixed; inset:0; background-image: linear-gra
 .sent-search input::placeholder { color:var(--muted); text-transform:none; }
 @media(max-width:768px) { .sent-grid { grid-template-columns:1fr; } }
 
+/* Fear & Greed Gauge */
+.fg-gauge { background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:20px; text-align:center; margin-bottom:20px; }
+.fg-score { font-size:64px; font-weight:600; line-height:1; letter-spacing:-0.04em; }
+.fg-label { font-size:14px; font-weight:600; margin-top:8px; letter-spacing:0.1em; text-transform:uppercase; }
+.fg-bar { height:12px; border-radius:6px; margin:16px auto 0; max-width:400px; background:linear-gradient(90deg,#e05c5c 0%,#f5a623 25%,#c8cdd6 50%,#4caf7d 75%,#00d4aa 100%); position:relative; }
+.fg-needle { position:absolute; top:-4px; width:4px; height:20px; background:#fff; border-radius:2px; transform:translateX(-50%); transition:left 1s ease; }
+.fg-components { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:8px; margin-top:16px; }
+.fg-comp { background:var(--bg); border:1px solid var(--border); border-radius:4px; padding:10px 12px; text-align:left; }
+.fg-comp .comp-name { font-size:10px; color:var(--muted); letter-spacing:0.08em; text-transform:uppercase; }
+.fg-comp .comp-score { font-size:18px; font-weight:600; margin-top:4px; }
+.fg-comp .comp-label { font-size:10px; margin-top:2px; }
+
+/* Watchlist */
+.wl-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:8px; }
+.wl-card { background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:14px 16px; cursor:pointer; transition:border-color 0.15s; position:relative; }
+.wl-card:hover { border-color:var(--accent); }
+.wl-card .wl-sym { font-size:16px; font-weight:600; color:#e8ecf2; }
+.wl-card .wl-name { font-size:10px; color:var(--muted); margin-top:2px; }
+.wl-card .wl-remove { position:absolute; top:8px; right:10px; font-size:14px; color:var(--muted); cursor:pointer; opacity:0; transition:opacity 0.15s; }
+.wl-card:hover .wl-remove { opacity:1; }
+.wl-card .wl-remove:hover { color:var(--danger); }
+.wl-add { display:flex; gap:8px; margin-bottom:16px; }
+.wl-add input { flex:1; background:var(--bg); border:1px solid var(--border-lit); border-radius:4px; color:var(--text); font-family:'IBM Plex Mono',monospace; font-size:13px; padding:10px 14px; text-transform:uppercase; }
+.wl-add input:focus { outline:none; border-color:var(--accent); }
+.wl-add input::placeholder { text-transform:none; color:var(--muted); }
+
+/* Earnings */
+.earn-list { display:flex; flex-direction:column; gap:6px; }
+.earn-item { display:flex; align-items:center; gap:14px; padding:12px 16px; background:var(--surface); border:1px solid var(--border); border-radius:5px; }
+.earn-sym { font-size:15px; font-weight:600; color:#e8ecf2; min-width:70px; }
+.earn-company { font-size:11px; color:var(--muted); flex:1; }
+.earn-date { font-size:11px; color:var(--text); min-width:90px; text-align:right; }
+.earn-timing { font-size:9px; padding:2px 6px; border-radius:2px; }
+.earn-timing.bmo { background:rgba(0,212,170,0.12); color:var(--accent); }
+.earn-timing.amc { background:rgba(167,139,250,0.15); color:var(--purple); }
+
+/* Charts */
+.chart-container { background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:16px; margin-bottom:12px; }
+.chart-container canvas { width:100% !important; max-height:200px; }
+.chart-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+.chart-title { font-size:11px; color:var(--accent); letter-spacing:0.1em; text-transform:uppercase; }
+.chart-range { display:flex; gap:4px; }
+.chart-range button { background:transparent; border:1px solid var(--border-lit); color:var(--muted); font-family:'IBM Plex Mono',monospace; font-size:9px; padding:3px 8px; border-radius:2px; cursor:pointer; }
+.chart-range button.active { border-color:var(--accent); color:var(--accent); }
+.chart-range button:hover { border-color:var(--text); color:var(--text); }
+
+/* Sector */
+.sector-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:8px; }
+.sector-card { background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:12px 14px; }
+.sector-name { font-size:10px; color:var(--muted); letter-spacing:0.08em; text-transform:uppercase; }
+.sector-val { font-size:18px; font-weight:600; margin-top:4px; }
+
 /* Footer */
 footer { margin-top:32px; padding:16px 0; border-top:1px solid var(--border); font-size:10px; color:var(--muted); display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; }
 
@@ -240,8 +293,10 @@ footer { margin-top:32px; padding:16px 0; border-top:1px solid var(--border); fo
     <div class="nav-item" onclick="showPage('ai')"><span class="icon">⬡</span> AI Analysis</div>
     <div class="nav-item" onclick="showPage('search')"><span class="icon">◎</span> Web Intel</div>
     <div class="nav-item" onclick="showPage('sentiment')"><span class="icon">◈</span> Retail Sentiment</div>
+    <div class="nav-item" onclick="showPage('watchlist')"><span class="icon">★</span> Watchlist</div>
     <div class="nav-section">Events</div>
     <div class="nav-item" onclick="showPage('calendar')"><span class="icon">▦</span> Fed / Data Cal</div>
+    <div class="nav-item" onclick="showPage('earnings')"><span class="icon">▣</span> Earnings Cal</div>
     <div class="nav-item" onclick="showPage('news')"><span class="icon">▤</span> News Feed</div>
     <div class="nav-section">Settings</div>
     <div class="nav-item" onclick="showPage('settings')"><span class="icon">⚙</span> Thresholds</div>
@@ -286,6 +341,15 @@ footer { margin-top:32px; padding:16px 0; border-top:1px solid var(--border); fo
         </div>
       </div>
 
+      <!-- Fear & Greed Gauge -->
+      <div class="section-label">Fear & Greed Index <span class="src-tag">COMPOSITE</span></div>
+      <div class="fg-gauge" id="fg-gauge">
+        <div class="fg-score" id="fg-score" style="color:var(--muted)">—</div>
+        <div class="fg-label" id="fg-label" style="color:var(--muted)">Loading…</div>
+        <div class="fg-bar"><div class="fg-needle" id="fg-needle" style="left:50%"></div></div>
+        <div class="fg-components" id="fg-components"></div>
+      </div>
+
       <!-- TradingView Mini Charts -->
       <div class="section-label">US Equities <span class="src-tag">TradingView</span></div>
       <div class="tv-widgets">
@@ -318,6 +382,15 @@ footer { margin-top:32px; padding:16px 0; border-top:1px solid var(--border); fo
         </div>
         <div class="curve-chart" id="curve-chart"><div style="margin:auto;color:var(--muted);font-size:11px">— fetch to visualize —</div></div>
         <div id="curve-note" style="margin-top:8px;font-size:10px;color:var(--muted)"></div>
+      </div>
+
+      <!-- Historical Charts -->
+      <div class="section-label">Historical Trends <span class="src-tag">FRED · 5Y</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px" id="charts-grid">
+        <div class="chart-container"><div class="chart-title">10-Year Treasury Yield</div><canvas id="chart-10y"></canvas></div>
+        <div class="chart-container"><div class="chart-title">Fed Funds Rate</div><canvas id="chart-ffr"></canvas></div>
+        <div class="chart-container"><div class="chart-title">CPI Year-over-Year %</div><canvas id="chart-cpi"></canvas></div>
+        <div class="chart-container"><div class="chart-title">Unemployment Rate</div><canvas id="chart-unrate"></canvas></div>
       </div>
 
       <div class="section-label">Inflation <span class="src-tag">BLS via FRED</span></div>
@@ -407,6 +480,23 @@ footer { margin-top:32px; padding:16px 0; border-top:1px solid var(--border); fo
       <div id="sent-ai" style="margin-top:16px"></div>
     </div>
 
+    <!-- ============ PAGE: WATCHLIST ============ -->
+    <div class="page" id="page-watchlist">
+      <p style="color:var(--muted);margin-bottom:14px;font-size:12px">Track your tickers. Click any card to view sentiment + trade evaluation. Saved in your browser.</p>
+      <div class="wl-add">
+        <input type="text" id="wl-input" placeholder="Add ticker (e.g. AAPL)…" maxlength="10">
+        <button class="btn btn-primary" onclick="addToWatchlist()">+ Add</button>
+      </div>
+      <div class="wl-grid" id="wl-grid"></div>
+    </div>
+
+    <!-- ============ PAGE: EARNINGS ============ -->
+    <div class="page" id="page-earnings">
+      <p style="color:var(--muted);margin-bottom:14px;font-size:12px">Major earnings reports for the next 2 weeks. Sourced via live web search.</p>
+      <div style="margin-bottom:16px"><button class="btn btn-outline" onclick="loadEarnings()">↻ Refresh Earnings</button></div>
+      <div class="earn-list" id="earn-list"><div class="alert info"><span>◎</span><span>Loading earnings calendar…</span></div></div>
+    </div>
+
     <!-- ============ PAGE: SETTINGS ============ -->
     <div class="page" id="page-settings">
       <div class="thresholds-panel">
@@ -455,12 +545,14 @@ function showPage(id) {
   // Highlight nav
   document.querySelectorAll('.nav-item').forEach(n => { if (n.textContent.trim().toLowerCase().includes(id === 'ai' ? 'ai analysis' : id === 'search' ? 'web intel' : id)) n.classList.add('active'); });
   document.querySelectorAll('.mob-item').forEach(n => { if (n.textContent.trim().toLowerCase().includes(id === 'dashboard' ? 'dash' : id === 'calendar' ? 'cal' : id === 'search' ? 'intel' : id)) n.classList.add('active'); });
-  const titles = { dashboard:'Dashboard', extended:'Extended Macro', ai:'AI Analysis', search:'Web Intelligence', sentiment:'Retail Sentiment', calendar:'Fed / Data Calendar', news:'News Feed', settings:'Settings' };
+  const titles = { dashboard:'Dashboard', extended:'Extended Macro', ai:'AI Analysis', search:'Web Intelligence', sentiment:'Retail Sentiment', watchlist:'Watchlist', calendar:'Fed / Data Calendar', earnings:'Earnings Calendar', news:'News Feed', settings:'Settings' };
   document.getElementById('page-title').textContent = titles[id] || id;
   // Auto-load calendar/news on first visit
   if (id === 'calendar' && !document.querySelector('#cal-list .cal-item')) loadCalendar();
   if (id === 'news' && !document.querySelector('#news-list .news-item')) loadNews();
   if (id === 'sentiment' && !document.querySelector('#sent-trending .sent-card')) loadTrending();
+  if (id === 'watchlist') renderWatchlist();
+  if (id === 'earnings' && !document.querySelector('#earn-list .earn-item')) loadEarnings();
 }
 
 /* ═══════════ FRED FETCH ═══════════ */
@@ -515,6 +607,9 @@ async function fetchAll() {
     // Load VIX and CAPE
     loadVIX();
     loadCAPE();
+    // Load Fear & Greed and Charts
+    loadFearGreed();
+    loadCharts();
   } catch(e) {
     showAlert('danger', '✗', e.message);
   } finally {
@@ -768,6 +863,148 @@ function timeAgo(date) {
   return Math.floor(s/86400) + 'd ago';
 }
 
+/* ═══════════ FEAR & GREED ═══════════ */
+async function loadFearGreed() {
+  const apiKey = document.getElementById('api-key').value.trim();
+  if (!apiKey) return;
+  try {
+    const r = await fetch(`/api/feargreed?api_key=${apiKey}`);
+    const d = await r.json();
+    if (d.error) return;
+    const c = d.composite;
+    const color = c >= 70 ? 'var(--ok)' : c >= 40 ? 'var(--warn)' : 'var(--danger)';
+    document.getElementById('fg-score').textContent = c;
+    document.getElementById('fg-score').style.color = color;
+    document.getElementById('fg-label').textContent = d.label;
+    document.getElementById('fg-label').style.color = color;
+    document.getElementById('fg-needle').style.left = c + '%';
+    const comps = document.getElementById('fg-components');
+    comps.innerHTML = Object.entries(d.components).map(([k, v]) => {
+      const cc = v.score >= 70 ? 'var(--ok)' : v.score >= 40 ? 'var(--warn)' : 'var(--danger)';
+      return `<div class="fg-comp"><div class="comp-name">${k.replace(/([A-Z])/g,' $1').trim()}</div><div class="comp-score" style="color:${cc}">${v.score}</div><div class="comp-label" style="color:${cc}">${v.label}</div></div>`;
+    }).join('');
+  } catch(e) { console.error('F&G error:', e); }
+}
+
+/* ═══════════ HISTORICAL CHARTS ═══════════ */
+const chartInstances = {};
+async function loadCharts() {
+  const apiKey = document.getElementById('api-key').value.trim();
+  if (!apiKey) return;
+  const series = [
+    { id: 'DGS10', canvas: 'chart-10y', color: '#00d4aa', label: '10Y Yield %' },
+    { id: 'DFF', canvas: 'chart-ffr', color: '#a78bfa', label: 'Fed Funds %' },
+    { id: 'CPIAUCSL', canvas: 'chart-cpi', color: '#f5a623', label: 'CPI Index', yoy: true },
+    { id: 'UNRATE', canvas: 'chart-unrate', color: '#00b4d8', label: 'Unemployment %' },
+  ];
+  for (const s of series) {
+    try {
+      const limit = s.yoy ? 72 : 60; // 5yr monthly
+      const obs = await fredFetch(s.id, apiKey, limit);
+      if (!obs.length) continue;
+      obs.reverse();
+      let labels, data;
+      if (s.yoy) {
+        labels = []; data = [];
+        for (let i = 12; i < obs.length; i++) {
+          const yoy = ((+obs[i].value - +obs[i-12].value) / +obs[i-12].value * 100);
+          labels.push(obs[i].date.slice(0,7));
+          data.push(+yoy.toFixed(2));
+        }
+      } else {
+        labels = obs.map(o => o.date.slice(0,7));
+        data = obs.map(o => +o.value);
+      }
+      if (chartInstances[s.canvas]) chartInstances[s.canvas].destroy();
+      const ctx = document.getElementById(s.canvas);
+      if (!ctx) continue;
+      chartInstances[s.canvas] = new Chart(ctx, {
+        type: 'line',
+        data: { labels, datasets: [{ label: s.label, data, borderColor: s.color, backgroundColor: s.color + '15', fill: true, pointRadius: 0, borderWidth: 1.5, tension: 0.3 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#505666', font: { size: 9 }, maxTicksLimit: 6 }, grid: { color: '#1e2129' } }, y: { ticks: { color: '#505666', font: { size: 9 } }, grid: { color: '#1e2129' } } } }
+      });
+    } catch(e) { console.error('Chart error:', s.id, e); }
+  }
+}
+
+/* ═══════════ WATCHLIST ═══════════ */
+function getWatchlist() {
+  const w = getCookie('watchlist');
+  return w ? w.split(',').filter(Boolean) : [];
+}
+function saveWatchlist(list) { setCookie('watchlist', list.join(','), 365); }
+
+function addToWatchlist() {
+  const input = document.getElementById('wl-input');
+  const sym = input.value.trim().toUpperCase();
+  if (!sym) return;
+  const list = getWatchlist();
+  if (!list.includes(sym)) { list.push(sym); saveWatchlist(list); }
+  input.value = '';
+  renderWatchlist();
+}
+
+function removeFromWatchlist(sym) {
+  const list = getWatchlist().filter(s => s !== sym);
+  saveWatchlist(list);
+  renderWatchlist();
+}
+
+async function renderWatchlist() {
+  const list = getWatchlist();
+  const grid = document.getElementById('wl-grid');
+  if (!list.length) { grid.innerHTML = '<div style="color:var(--muted);font-size:11px;grid-column:1/-1">No tickers yet. Add some above.</div>'; return; }
+  grid.innerHTML = list.map(sym => `<div class="wl-card" onclick="showPage('sentiment');setTimeout(()=>searchSentiment('${sym}'),100)">
+    <span class="wl-remove" onclick="event.stopPropagation();removeFromWatchlist('${sym}')">✕</span>
+    <div class="wl-sym">${sym}</div>
+    <div class="wl-name" id="wl-name-${sym}">Loading…</div>
+    <div style="margin-top:8px" id="wl-sent-${sym}"></div>
+  </div>`).join('');
+  // Load sentiment for each
+  for (const sym of list) {
+    try {
+      const r = await fetch(`/api/sentiment?symbol=${sym}`);
+      const d = await r.json();
+      if (d.error) { document.getElementById('wl-name-'+sym).textContent = 'Error'; continue; }
+      document.getElementById('wl-name-'+sym).textContent = d.title;
+      const s = d.sentiment;
+      document.getElementById('wl-sent-'+sym).innerHTML = `<div class="sent-bar"><div class="bull" style="width:${s.bullPct}%"></div><div class="bear" style="width:${s.bearPct}%"></div></div><div class="sent-pct"><span class="bull-pct">🟢 ${s.bullPct}%</span><span class="bear-pct">${s.bearPct}% 🔴</span></div>`;
+    } catch { document.getElementById('wl-name-'+sym).textContent = sym; }
+  }
+}
+
+/* ═══════════ EARNINGS CALENDAR ═══════════ */
+async function loadEarnings() {
+  const container = document.getElementById('earn-list');
+  container.innerHTML = '<div style="color:var(--muted);font-size:11px"><span class="spinner-sm"></span> Searching for upcoming earnings… (10-15s)</div>';
+  try {
+    const r = await fetch('/api/earnings');
+    const d = await r.json();
+    if (d.error) throw new Error(d.error);
+    if (d.earnings && d.earnings.length) {
+      container.innerHTML = d.earnings.map(e => {
+        const dt = new Date(e.date + 'T12:00:00');
+        const dayStr = dt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+        const timing = (e.timing||'').toUpperCase();
+        const timingCls = timing.includes('BMO') || timing.includes('BEFORE') ? 'bmo' : 'amc';
+        const timingLabel = timing.includes('BMO') || timing.includes('BEFORE') ? 'Pre-Market' : 'After Close';
+        return `<div class="earn-item" style="cursor:pointer" onclick="showPage('sentiment');setTimeout(()=>searchSentiment('${e.symbol}'),100)">
+          <div class="earn-sym">${e.symbol}</div>
+          <div class="earn-company">${e.company}${e.estimate_eps ? ' · Est: $'+e.estimate_eps : ''}${e.context ? '<br><span style="font-size:10px;color:var(--muted)">'+e.context+'</span>' : ''}</div>
+          <span class="earn-timing ${timingCls}">${timingLabel}</span>
+          <div class="earn-date">${dayStr}</div>
+        </div>`;
+      }).join('');
+    } else if (d.raw) {
+      container.innerHTML = `<div style="font-size:12px;color:var(--text);white-space:pre-wrap;line-height:1.6">${d.raw}</div>`;
+    } else {
+      container.innerHTML = '<div class="alert info"><span>◎</span><span>No earnings data returned.</span></div>';
+    }
+  } catch(e) {
+    container.innerHTML = `<div class="alert danger"><span>✗</span><span>${e.message}</span></div>`;
+  }
+}
+
 /* ═══════════ RETAIL SENTIMENT ═══════════ */
 async function loadTrending() {
   const container = document.getElementById('sent-trending');
@@ -995,10 +1232,41 @@ loadTradingViewWidgets();
 loadCAPE();
 
 /* ═══════════ INIT ═══════════ */
+// Cookie helpers
+function setCookie(k,v,days=90){document.cookie=k+'='+encodeURIComponent(v)+';max-age='+(days*86400)+';path=/;SameSite=Lax';}
+function getCookie(k){const m=document.cookie.match(new RegExp('(?:^|; )'+k+'=([^;]*)'));return m?decodeURIComponent(m[1]):null;}
+
+// Restore FRED key from cookie
+const savedKey = getCookie('fred_api_key');
+if (savedKey) { document.getElementById('api-key').value = savedKey; }
+
+// Save key on fetch
+const origFetchAll = fetchAll;
+fetchAll = async function() {
+  const k = document.getElementById('api-key').value.trim();
+  if (k && k.length >= 20) setCookie('fred_api_key', k);
+  return origFetchAll();
+};
+
+// Auto-refresh timer
+let autoRefreshInterval = null;
+function startAutoRefresh(mins=30) {
+  if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+  autoRefreshInterval = setInterval(() => {
+    const k = document.getElementById('api-key').value.trim();
+    if (k && k.length >= 20) { fetchAll(); }
+  }, mins * 60 * 1000);
+}
+
+// Auto-fetch on load if key exists, then start auto-refresh
+if (savedKey) { setTimeout(() => fetchAll(), 500); }
+startAutoRefresh(30);
+
 document.getElementById('api-key').addEventListener('keydown', e => { if(e.key==='Enter') fetchAll(); });
 document.getElementById('ai-question').addEventListener('keydown', e => { if(e.key==='Enter' && !e.shiftKey) { e.preventDefault(); runAI(); }});
 document.getElementById('search-query').addEventListener('keydown', e => { if(e.key==='Enter' && !e.shiftKey) { e.preventDefault(); runSearch(); }});
 document.getElementById('sent-ticker').addEventListener('keydown', e => { if(e.key==='Enter') searchSentiment(); });
+document.getElementById('wl-input').addEventListener('keydown', e => { if(e.key==='Enter') addToWatchlist(); });
 </script>
 </body>
 </html>
