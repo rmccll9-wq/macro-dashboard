@@ -307,10 +307,14 @@ footer { margin-top:32px; padding:16px 0; border-top:1px solid var(--border); fo
   .card-value { font-size:20px; }
   .mobile-nav { display:flex !important; }
 }
-.mobile-nav { display:none; position:fixed; bottom:0; left:0; right:0; background:var(--surface); border-top:1px solid var(--border); z-index:100; justify-content:space-around; padding:8px 0; }
-.mobile-nav .mob-item { display:flex; flex-direction:column; align-items:center; gap:2px; font-size:9px; color:var(--muted); cursor:pointer; padding:4px 8px; }
-.mobile-nav .mob-item.active { color:var(--accent); }
-.mobile-nav .mob-item .icon { font-size:16px; }
+.mobile-nav { display:none; position:fixed; bottom:0; left:0; right:0; background:var(--surface); border-top:1px solid var(--border); z-index:100; padding:0; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+.mobile-nav::-webkit-scrollbar { display:none; }
+.mobile-nav-inner { display:flex; align-items:stretch; min-width:max-content; padding:0 4px; }
+.mobile-nav .mob-item { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; font-size:9px; color:var(--muted); cursor:pointer; padding:8px 12px; white-space:nowrap; border-bottom:2px solid transparent; transition:all 0.15s; flex-shrink:0; }
+.mobile-nav .mob-item:hover { color:var(--text); }
+.mobile-nav .mob-item.active { color:var(--accent); border-bottom-color:var(--accent); }
+.mobile-nav .mob-item .icon { font-size:15px; line-height:1; }
+.mobile-nav .mob-sep { width:1px; background:var(--border); margin:8px 0; flex-shrink:0; }
 
 /* ═══ INTELLIGENCE PLATFORM STYLES ═══ */
 .intel-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; flex-wrap:wrap; gap:10px; }
@@ -1100,11 +1104,27 @@ async function gipLogin(){
 
 <!-- Mobile nav -->
 <div class="mobile-nav">
-  <div class="mob-item active" onclick="showPage('dashboard')"><span class="icon">◉</span>Dash</div>
-  <div class="mob-item" onclick="showPage('ai')"><span class="icon">⬡</span>AI</div>
-  <div class="mob-item" onclick="showPage('calendar')"><span class="icon">▦</span>Cal</div>
-  <div class="mob-item" onclick="showPage('news')"><span class="icon">▤</span>News</div>
-  <div class="mob-item" onclick="showPage('search')"><span class="icon">◎</span>Intel</div>
+  <div class="mobile-nav-inner">
+    <div class="mob-item active" onclick="showPage('dashboard')"><span class="icon">◉</span>Dash</div>
+    <div class="mob-item" onclick="showPage('extended')"><span class="icon">◫</span>Macro</div>
+    <div class="mob-sep"></div>
+    <div class="mob-item" onclick="showPage('briefing')"><span class="icon">📋</span>Brief</div>
+    <div class="mob-item" onclick="showPage('ai')"><span class="icon">⬡</span>AI</div>
+    <div class="mob-item" onclick="showPage('search')"><span class="icon">◎</span>Intel</div>
+    <div class="mob-item" onclick="showPage('sigint')"><span class="icon">⬢</span>SIGINT</div>
+    <div class="mob-item" onclick="showPage('newswire')"><span class="icon">◈</span>Wire</div>
+    <div class="mob-sep"></div>
+    <div class="mob-item" onclick="showPage('calendar')"><span class="icon">▦</span>Cal</div>
+    <div class="mob-item" onclick="showPage('earnings')"><span class="icon">▣</span>Earn</div>
+    <div class="mob-item" onclick="showPage('news')"><span class="icon">▤</span>News</div>
+    <div class="mob-sep"></div>
+    <div class="mob-item" onclick="showPage('sentiment')"><span class="icon">◈</span>Sent</div>
+    <div class="mob-item" onclick="showPage('watchlist')"><span class="icon">★</span>Watch</div>
+    <div class="mob-item" onclick="showPage('cascade')"><span class="icon">⬡</span>Cascade</div>
+    <div class="mob-item" onclick="showPage('backtest')"><span class="icon">▤</span>BT</div>
+    <div class="mob-sep"></div>
+    <div class="mob-item" onclick="showPage('settings')"><span class="icon">⚙</span>Settings</div>
+  </div>
 </div>
 
 <script>
@@ -1237,7 +1257,9 @@ function showPage(id) {
   if (page) page.classList.add('active');
   // Highlight nav
   document.querySelectorAll('.nav-item').forEach(n => { if (n.textContent.trim().toLowerCase().includes(id === 'ai' ? 'ai analysis' : id === 'search' ? 'web intel' : id)) n.classList.add('active'); });
-  document.querySelectorAll('.mob-item').forEach(n => { if (n.textContent.trim().toLowerCase().includes(id === 'dashboard' ? 'dash' : id === 'calendar' ? 'cal' : id === 'search' ? 'intel' : id)) n.classList.add('active'); });
+  const mobLabelMap = { dashboard:'dash', extended:'macro', briefing:'brief', ai:'ai', search:'intel', sigint:'sigint', sigdetect:'sigdetect', newswire:'wire', calendar:'cal', earnings:'earn', news:'news', sentiment:'sent', watchlist:'watch', cascade:'cascade', backtest:'bt', settings:'settings' };
+  const mobLabel = mobLabelMap[id] || id;
+  document.querySelectorAll('.mob-item').forEach(n => { if (n.textContent.trim().toLowerCase().includes(mobLabel)) n.classList.add('active'); });
   const titles = { dashboard:'Dashboard', extended:'Extended Macro', briefing:'Daily Intelligence Brief', sigint:'SIGINT Feed', sigdetect:'Signal Detection', newswire:'Global Newswire', ai:'AI Analysis', search:'Web Intelligence', sentiment:'Retail Sentiment', watchlist:'Watchlist', calendar:'Fed / Data Calendar', earnings:'Earnings Calendar', news:'News Feed', settings:'Settings', backtest:'Backtester' };
   document.getElementById('page-title').textContent = titles[id] || id;
   // Auto-load calendar/news on first visit
