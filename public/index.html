@@ -398,52 +398,58 @@ footer { margin-top:32px; padding:16px 0; border-top:1px solid var(--border); fo
 .cascade-summary .cs-val.low { color:var(--ok); }
 
 .cascade-tree { position:relative; }
-.cascade-node { margin-bottom:8px; }
-.cascade-node-header { display:flex; align-items:flex-start; gap:10px; padding:12px 16px; background:var(--surface); border:1px solid var(--border); border-radius:6px; cursor:pointer; transition:all 0.15s; }
-.cascade-node-header:hover { border-color:var(--border-lit); background:var(--surface2); }
-.cascade-node-header.expanded { border-color:var(--accent); border-bottom-left-radius:0; border-bottom-right-radius:0; }
-.cascade-node-id { font-size:9px; font-weight:600; color:var(--accent); background:rgba(0,212,170,0.1); padding:2px 6px; border-radius:2px; white-space:nowrap; margin-top:2px; }
-.cascade-node-body { flex:1; }
-.cascade-node-effect { font-size:12px; color:#e8ecf2; line-height:1.4; }
-.cascade-node-meta { display:flex; gap:8px; margin-top:6px; flex-wrap:wrap; align-items:center; }
-.cascade-node-domain { font-size:9px; letter-spacing:0.08em; padding:2px 6px; border-radius:2px; font-weight:600; }
+.cascade-order-section { margin-bottom:24px; }
+.cascade-order-label { font-size:10px; letter-spacing:0.14em; text-transform:uppercase; padding:8px 0; margin-bottom:12px; border-bottom:1px solid var(--border); }
+.cascade-order-label .order-num { font-weight:600; }
+
+.cascade-node { margin-bottom:12px; border-radius:6px; overflow:hidden; border:1px solid var(--border); transition:border-color 0.15s; }
+.cascade-node:hover { border-color:var(--border-lit); }
+.cascade-node-top { display:flex; align-items:stretch; cursor:pointer; }
+.cascade-node-severity-bar { width:4px; flex-shrink:0; }
+.cascade-node-content { flex:1; padding:14px 16px; }
+.cascade-node-row1 { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+.cascade-node-id { font-size:9px; font-weight:600; color:var(--accent); background:rgba(0,212,170,0.1); padding:2px 7px; border-radius:2px; white-space:nowrap; }
+.cascade-node-domain { font-size:9px; letter-spacing:0.08em; padding:2px 7px; border-radius:2px; font-weight:600; text-transform:uppercase; }
 .cascade-node-domain.ENERGY { background:rgba(245,166,35,0.12); color:var(--warn); }
 .cascade-node-domain.FINANCIAL { background:rgba(0,212,170,0.1); color:var(--accent); }
 .cascade-node-domain.MILITARY { background:rgba(224,92,92,0.15); color:#ff6b6b; }
 .cascade-node-domain.TRADE { background:rgba(0,180,216,0.12); color:var(--accent2); }
-.cascade-node-domain.COMMODITY { background:rgba(245,166,35,0.15); color:#f5a623; }
 .cascade-node-domain.CYBER { background:rgba(167,139,250,0.15); color:var(--purple); }
-.cascade-node-domain.POLITICAL { background:rgba(100,110,130,0.15); color:var(--muted); }
-.cascade-node-domain.DIPLOMATIC { background:rgba(0,180,216,0.1); color:var(--accent2); }
-.cascade-node-domain.SOCIAL { background:rgba(167,139,250,0.1); color:#c4b5fd; }
+.cascade-node-domain.POLITICAL { background:rgba(100,110,130,0.2); color:#9ca3af; }
+.cascade-node-domain.HUMANITARIAN { background:rgba(224,92,92,0.1); color:#fca5a5; }
 .cascade-node-domain.TECHNOLOGY { background:rgba(0,180,216,0.15); color:#7dd3fc; }
-.cascade-prob { font-size:10px; color:var(--muted); }
-.cascade-prob-bar { width:40px; height:4px; background:var(--border); border-radius:2px; display:inline-block; vertical-align:middle; margin-left:2px; position:relative; }
-.cascade-prob-fill { height:100%; border-radius:2px; position:absolute; left:0; top:0; }
-.cascade-sev { font-size:10px; padding:1px 6px; border-radius:2px; }
-.cascade-sev.crit { background:rgba(224,92,92,0.2); color:var(--danger); }
-.cascade-sev.high { background:rgba(245,166,35,0.15); color:var(--warn); }
-.cascade-sev.med { background:rgba(0,180,216,0.1); color:var(--accent2); }
-.cascade-sev.low { background:rgba(76,175,125,0.1); color:var(--ok); }
-.cascade-time { font-size:10px; color:var(--muted); }
-.cascade-trigger { font-size:10px; color:var(--muted); margin-top:6px; padding:6px 10px; background:var(--bg); border-radius:3px; border-left:2px solid var(--warn); line-height:1.4; }
-.cascade-trigger b { color:var(--warn); font-weight:500; }
-.cascade-children { margin-left:24px; padding-left:16px; border-left:1px solid var(--border-lit); margin-top:0; }
-.cascade-children .cascade-node-header { background:var(--bg); }
-.cascade-children .cascade-children .cascade-node-header { background:color-mix(in srgb, var(--bg) 80%, var(--surface)); border-color:var(--border); }
-.cascade-children .cascade-children .cascade-node-id { color:var(--purple); background:rgba(167,139,250,0.1); }
+.cascade-node-domain.FOOD { background:rgba(76,175,125,0.15); color:var(--ok); }
+.cascade-node-domain.MONETARY { background:rgba(167,139,250,0.1); color:#c4b5fd; }
+.cascade-node-parent { font-size:9px; color:var(--muted); margin-left:auto; white-space:nowrap; }
+.cascade-node-effect { font-size:12.5px; color:#e8ecf2; line-height:1.5; margin-bottom:10px; }
+.cascade-node-stats { display:grid; grid-template-columns:repeat(3, auto); gap:6px 20px; font-size:10px; }
+.cascade-stat { display:flex; align-items:center; gap:6px; }
+.cascade-stat-label { color:var(--muted); text-transform:uppercase; letter-spacing:0.06em; font-size:9px; }
+.cascade-stat-val { font-weight:500; }
+.cascade-prob-bar { width:48px; height:5px; background:var(--border); border-radius:3px; overflow:hidden; display:inline-block; vertical-align:middle; }
+.cascade-prob-fill { height:100%; border-radius:3px; }
 
-.cascade-section { margin-top:24px; padding:16px; background:var(--surface); border:1px solid var(--border); border-radius:6px; }
-.cascade-section-title { font-size:10px; letter-spacing:0.15em; text-transform:uppercase; color:var(--danger); margin-bottom:10px; display:flex; align-items:center; gap:6px; }
-.cascade-section-title.warn-title { color:var(--warn); }
-.cascade-section-title.info-title { color:var(--accent); }
-.cascade-blackswan { padding:10px 14px; margin-bottom:6px; background:var(--bg); border:1px solid rgba(224,92,92,0.2); border-radius:4px; }
-.cascade-blackswan .bs-scenario { font-size:12px; color:#e8ecf2; line-height:1.4; }
-.cascade-blackswan .bs-chain { font-size:10px; color:var(--muted); margin-top:4px; }
-.cascade-blackswan .bs-meta { display:flex; gap:8px; margin-top:6px; font-size:10px; }
-.cascade-convergence { font-size:12px; color:var(--text); line-height:1.6; padding:6px 0; border-bottom:1px solid var(--border); }
-.cascade-convergence:last-child { border-bottom:none; }
-.cascade-bottomline { font-size:13px; color:#e8ecf2; line-height:1.6; padding:14px 16px; background:var(--bg); border:1px solid var(--accent); border-radius:6px; margin-top:20px; }
+.cascade-detail { padding:12px 16px; background:var(--surface2); border-top:1px solid var(--border); display:none; }
+.cascade-detail.open { display:block; }
+.cascade-detail-row { display:flex; gap:8px; margin-bottom:8px; font-size:11px; line-height:1.5; }
+.cascade-detail-row:last-child { margin-bottom:0; }
+.cascade-detail-label { font-weight:600; white-space:nowrap; min-width:110px; flex-shrink:0; }
+.cascade-detail-val { color:var(--text); }
+
+.cascade-section { margin-top:28px; padding:16px 18px; background:var(--surface); border:1px solid var(--border); border-radius:6px; }
+.cascade-section-title { font-size:10px; letter-spacing:0.14em; text-transform:uppercase; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+.cascade-conv-item { padding:12px 0; border-bottom:1px solid var(--border); }
+.cascade-conv-item:last-child { border-bottom:none; }
+.cascade-conv-desc { font-size:12px; color:#e8ecf2; line-height:1.5; margin-bottom:6px; }
+.cascade-conv-nodes { font-size:10px; color:var(--muted); margin-bottom:4px; }
+.cascade-conv-risk { font-size:11px; color:var(--warn); line-height:1.4; }
+
+.cascade-blackswan { padding:12px 14px; margin-bottom:8px; background:var(--bg); border:1px solid rgba(167,139,250,0.2); border-radius:5px; }
+.cascade-blackswan .bs-scenario { font-size:12px; color:#e8ecf2; line-height:1.5; font-weight:500; }
+.cascade-blackswan .bs-impact { font-size:11px; color:var(--text); margin-top:6px; line-height:1.5; }
+.cascade-blackswan .bs-footer { display:flex; gap:16px; margin-top:8px; font-size:10px; }
+
+.cascade-bottomline { font-size:13px; color:#e8ecf2; line-height:1.6; padding:16px 18px; background:var(--surface); border-left:3px solid var(--accent); border-radius:4px; margin-top:24px; }
 .cascade-raw { font-size:12px; line-height:1.8; white-space:pre-wrap; color:var(--text); }
 </style>
 </head>
@@ -2225,79 +2231,91 @@ async function runCascade() {
 function renderCascade(c) {
   const summaryC = document.getElementById('cascade-summary-container');
   const output = document.getElementById('cascade-output');
-
-  // Threat level styling
   const tl = (c.overall_threat_level || 'GUARDED').toLowerCase();
   const tlColors = { severe:'var(--danger)', high:'#ff6b6b', elevated:'var(--warn)', guarded:'var(--accent2)', low:'var(--ok)' };
   const tlColor = tlColors[tl] || 'var(--muted)';
-  const nodeCount = (c.cascades || []).length;
-  const domains = [...new Set((c.cascades || []).map(n => n.domain))];
-  const avgProb = nodeCount ? Math.round((c.cascades || []).reduce((a,n) => a + (n.probability||0), 0) / nodeCount) : 0;
+  const nodes = c.cascades || [];
+  const domains = [...new Set(nodes.map(n => n.domain))];
+  const maxSev = nodes.length ? Math.max(...nodes.map(n => n.severity||1)) : 0;
 
-  // Summary bar
   summaryC.innerHTML = `<div class="cascade-summary">
-    <div class="cs-item"><div class="cs-label">Threat Level</div><div class="cs-val ${tl}" style="color:${tlColor}">${(c.overall_threat_level||'N/A').toUpperCase()}</div></div>
-    <div class="cs-item"><div class="cs-label">Confidence</div><div class="cs-val">${c.confidence || '—'}%</div></div>
-    <div class="cs-item"><div class="cs-label">Cascade Nodes</div><div class="cs-val">${nodeCount}</div></div>
+    <div class="cs-item"><div class="cs-label">Threat Level</div><div class="cs-val ${tl}" style="color:${tlColor}">${(c.overall_threat_level||'—').toUpperCase()}</div></div>
+    <div class="cs-item"><div class="cs-label">Confidence</div><div class="cs-val">${c.confidence||'—'}%</div></div>
+    <div class="cs-item"><div class="cs-label">Risk Nodes</div><div class="cs-val">${nodes.length}</div></div>
     <div class="cs-item"><div class="cs-label">Domains Hit</div><div class="cs-val">${domains.length}</div></div>
   </div>`;
 
+  const sevColors = ['','var(--ok)','var(--accent2)','var(--warn)','#ff6b6b','var(--danger)'];
+  const sevLabels = ['','LOW','MODERATE','HIGH','CRITICAL','CATASTROPHIC'];
+  const probColor = p => p >= 80 ? 'var(--danger)' : p >= 60 ? 'var(--warn)' : p >= 40 ? 'var(--accent2)' : 'var(--ok)';
   let html = '';
 
-  // Trigger header
-  html += `<div style="margin-bottom:20px;padding:14px 16px;background:var(--surface);border:1px solid ${tlColor};border-radius:6px;">
-    <div style="font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:${tlColor};margin-bottom:4px;">TRIGGERING EVENT</div>
-    <div style="font-size:13px;color:#e8ecf2;line-height:1.4;">${c.trigger || 'Unknown'}</div>
-    <div style="font-size:10px;color:var(--muted);margin-top:6px;">${c.time_horizon || ''}</div>
+  // Trigger box
+  html += `<div style="margin-bottom:24px;padding:16px 18px;background:var(--surface);border-left:3px solid ${tlColor};border-radius:4px;">
+    <div style="font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:${tlColor};margin-bottom:6px;">⬥ TRIGGERING EVENT</div>
+    <div style="font-size:13px;color:#e8ecf2;line-height:1.5;">${c.trigger||'Unknown'}</div>
+    ${c.time_horizon ? `<div style="font-size:11px;color:var(--muted);margin-top:8px;">Timeline: ${c.time_horizon}</div>` : ''}
   </div>`;
 
-  // Build tree — organize by order
-  const nodes = c.cascades || [];
-  const orders = [1,2,3,4];
-  const orderLabels = {1:'FIRST-ORDER EFFECTS (Direct Consequences)', 2:'SECOND-ORDER EFFECTS (Downstream Ripples)', 3:'THIRD-ORDER EFFECTS (Systemic Contagion)', 4:'FOURTH-ORDER EFFECTS (Deep Cascade)'};
+  // Cascade nodes grouped by order
+  const orderLabels = {1:'First-Order — Direct Impact',2:'Second-Order — Downstream Ripple',3:'Third-Order — Systemic Contagion',4:'Fourth-Order — Deep Cascade'};
+  const orderColors = {1:'var(--danger)',2:'var(--warn)',3:'var(--accent2)',4:'var(--purple)'};
 
-  orders.forEach(ord => {
+  [1,2,3,4].forEach(ord => {
     const orderNodes = nodes.filter(n => n.order === ord);
     if (!orderNodes.length) return;
-    html += `<div class="cascade-section-title" style="margin-top:20px;margin-bottom:10px;font-size:10px;letter-spacing:0.12em;color:var(--accent);text-transform:uppercase;">${orderLabels[ord] || 'ORDER '+ord}</div>`;
-    orderNodes.forEach(n => {
-      const sevColors = ['','var(--ok)','var(--accent2)','var(--warn)','#ff6b6b','var(--danger)'];
-      const sevLabels = ['','LOW','MODERATE','HIGH','CRITICAL','CATASTROPHIC'];
-      const sev = n.severity || 1;
-      const probColor = n.probability >= 80 ? 'var(--danger)' : n.probability >= 60 ? 'var(--warn)' : n.probability >= 40 ? 'var(--accent2)' : 'var(--muted)';
-      const domainClass = n.domain || 'UNKNOWN';
+    html += `<div class="cascade-order-section">
+      <div class="cascade-order-label" style="color:${orderColors[ord]}"><span class="order-num">${ord}.</span> ${orderLabels[ord]||'Order '+ord}</div>`;
 
-      html += `<div class="cascade-node">
-        <div class="cascade-node-header" onclick="this.classList.toggle('expanded');this.nextElementSibling&&this.nextElementSibling.classList.toggle('show');">
-          <div class="cascade-node-id">${n.id || '?'}</div>
-          <div class="cascade-node-body">
-            <div class="cascade-node-effect">${n.effect || ''}</div>
-            <div class="cascade-node-meta">
-              <span class="cascade-node-domain ${domainClass}">${domainClass}</span>
-              <span style="font-size:10px;color:${probColor}">⬤ ${n.probability||0}% probable</span>
-              <span style="font-size:10px;color:${sevColors[sev]}">SEV ${sev} — ${sevLabels[sev]}</span>
-              <span style="font-size:10px;color:var(--muted)">${n.timeframe||''}</span>
-              ${n.parent ? `<span style="font-size:9px;color:var(--muted)">← from ${n.parent}</span>` : ''}
+    orderNodes.forEach(n => {
+      const sev = n.severity||1;
+      const p = n.probability||0;
+      const sc = sevColors[sev];
+      html += `<div class="cascade-node" data-node-id="${n.id}">
+        <div class="cascade-node-top" onclick="this.parentElement.querySelector('.cascade-detail').classList.toggle('open')">
+          <div class="cascade-node-severity-bar" style="background:${sc}"></div>
+          <div class="cascade-node-content">
+            <div class="cascade-node-row1">
+              <span class="cascade-node-id">${n.id||'?'}</span>
+              <span class="cascade-node-domain ${n.domain||''}">${n.domain||'—'}</span>
+              ${n.parent ? `<span class="cascade-node-parent">↳ from ${n.parent}</span>` : ''}
+            </div>
+            <div class="cascade-node-effect">${n.effect||''}</div>
+            <div class="cascade-node-stats">
+              <div class="cascade-stat">
+                <span class="cascade-stat-label">Probability</span>
+                <span class="cascade-stat-val" style="color:${probColor(p)}">${p}%</span>
+                <span class="cascade-prob-bar"><span class="cascade-prob-fill" style="width:${p}%;background:${probColor(p)}"></span></span>
+              </div>
+              <div class="cascade-stat">
+                <span class="cascade-stat-label">Severity</span>
+                <span class="cascade-stat-val" style="color:${sc}">${sevLabels[sev]}</span>
+              </div>
+              <div class="cascade-stat">
+                <span class="cascade-stat-label">Timeframe</span>
+                <span class="cascade-stat-val" style="color:var(--text)">${n.timeframe||'—'}</span>
+              </div>
             </div>
           </div>
         </div>
-        <div class="cascade-node-detail" style="display:none;padding:10px 16px 12px 44px;background:var(--surface2);border:1px solid var(--border);border-top:0;border-radius:0 0 6px 6px;font-size:11px;line-height:1.6;">
-          ${n.watch_trigger ? `<div style="margin-bottom:6px;"><span style="color:var(--warn);font-weight:600;">⊳ WATCH TRIGGER:</span> <span style="color:var(--text);">${n.watch_trigger}</span></div>` : ''}
-          ${n.current_status ? `<div><span style="color:var(--accent);font-weight:600;">⊳ CURRENT STATUS:</span> <span style="color:var(--text);">${n.current_status}</span></div>` : ''}
+        <div class="cascade-detail">
+          ${n.current_status ? `<div class="cascade-detail-row"><span class="cascade-detail-label" style="color:var(--accent);">◉ Current Status</span><span class="cascade-detail-val">${n.current_status}</span></div>` : ''}
+          ${n.watch_trigger ? `<div class="cascade-detail-row"><span class="cascade-detail-label" style="color:var(--warn);">⊳ Watch Trigger</span><span class="cascade-detail-val">${n.watch_trigger}</span></div>` : ''}
         </div>
       </div>`;
     });
+    html += `</div>`;
   });
 
   // Convergence Points
   if (c.convergence_points && c.convergence_points.length) {
-    html += `<div class="cascade-section-title info-title" style="margin-top:24px;margin-bottom:10px;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--danger);">⚠ CONVERGENCE POINTS (Highest Risk Nodes)</div>`;
-    html += `<div style="background:var(--surface);border:1px solid rgba(224,92,92,0.3);border-radius:6px;padding:16px;">`;
+    html += `<div class="cascade-section" style="border-color:rgba(224,92,92,0.3);">
+      <div class="cascade-section-title" style="color:var(--danger);">⚠ Convergence Points — Where Cascades Intersect</div>`;
     c.convergence_points.forEach(cp => {
-      html += `<div class="cascade-convergence">
-        <div style="font-size:12px;color:#e8ecf2;font-weight:500;">⬥ ${cp.description || ''}</div>
-        <div style="font-size:10px;color:var(--muted);margin-top:4px;">Feeding nodes: ${(cp.feeding_nodes||[]).join(', ')}</div>
-        <div style="font-size:11px;color:var(--warn);margin-top:4px;">${cp.risk_multiplier || ''}</div>
+      html += `<div class="cascade-conv-item">
+        <div class="cascade-conv-desc">${cp.description||''}</div>
+        <div class="cascade-conv-nodes">Feeding nodes: ${(cp.feeding_nodes||[]).map(n => `<span style="color:var(--accent)">${n}</span>`).join(', ')}</div>
+        <div class="cascade-conv-risk">${cp.risk_multiplier||''}</div>
       </div>`;
     });
     html += `</div>`;
@@ -2305,42 +2323,35 @@ function renderCascade(c) {
 
   // Black Swans
   if (c.black_swans && c.black_swans.length) {
-    html += `<div class="cascade-section-title" style="margin-top:24px;margin-bottom:10px;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--purple);">🦢 BLACK SWAN AMPLIFIERS</div>`;
+    html += `<div class="cascade-section" style="border-color:rgba(167,139,250,0.3);">
+      <div class="cascade-section-title" style="color:var(--purple);">🦢 Black Swan Amplifiers</div>`;
     c.black_swans.forEach(bs => {
       html += `<div class="cascade-blackswan">
-        <div class="bs-scenario">${bs.scenario || ''}</div>
-        <div class="bs-chain">${bs.impact || ''}</div>
-        <div class="bs-meta">
-          <span style="color:var(--warn)">P: ${bs.probability||'?'}%</span>
-          <span style="color:var(--muted)">${bs.acceleration || ''}</span>
+        <div class="bs-scenario">${bs.scenario||''}</div>
+        <div class="bs-impact">${bs.impact||''}</div>
+        <div class="bs-footer">
+          <span style="color:var(--purple)">Probability: ${bs.probability||'?'}%</span>
+          <span style="color:var(--muted)">${bs.acceleration||''}</span>
         </div>
       </div>`;
     });
+    html += `</div>`;
   }
 
   // Contrarian View
   if (c.contrarian_view) {
-    html += `<div class="cascade-section-title" style="margin-top:24px;margin-bottom:10px;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--accent2);">🔄 CONTRARIAN VIEW</div>`;
-    html += `<div style="padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:6px;font-size:12px;color:var(--text);line-height:1.6;">${c.contrarian_view}</div>`;
+    html += `<div class="cascade-section">
+      <div class="cascade-section-title" style="color:var(--accent2);">🔄 Contrarian View</div>
+      <div style="font-size:12px;color:var(--text);line-height:1.6;">${c.contrarian_view}</div>
+    </div>`;
   }
 
   // Bottom Line
   if (c.bottom_line) {
-    html += `<div class="cascade-bottomline">⬥ BOTTOM LINE: ${c.bottom_line}</div>`;
+    html += `<div class="cascade-bottomline">⬥ <strong>BOTTOM LINE:</strong> ${c.bottom_line}</div>`;
   }
 
   output.innerHTML = `<div class="cascade-tree">${html}</div>`;
-
-  // Wire up expand/collapse
-  output.querySelectorAll('.cascade-node-header').forEach(h => {
-    h.addEventListener('click', () => {
-      const detail = h.nextElementSibling;
-      if (detail && detail.classList.contains('cascade-node-detail')) {
-        const showing = detail.style.display !== 'none';
-        detail.style.display = showing ? 'none' : 'block';
-      }
-    });
-  });
 }
 </script>
 </body>
