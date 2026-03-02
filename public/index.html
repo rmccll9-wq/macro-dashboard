@@ -2032,10 +2032,7 @@ async function runBacktest() {
         },
         scales: {
           x: { ticks: { color: '#505666', font: { size: 9 }, maxTicksLimit: 10 }, grid: { color: '#1e2129' } },
-          y: { ticks: { color: '#505666', font: { size: 9 }, callback: v => '
-</body>
-</html>
-+v.toFixed(0) }, grid: { color: '#1e2129' } }
+          y: { ticks: { color: '#505666', font: { size: 9 }, callback: v => '$'+v.toFixed(0) }, grid: { color: '#1e2129' } }
         }
       }
     });
@@ -2060,10 +2057,7 @@ async function runBacktest() {
         },
         scales: {
           x: { ticks: { color: '#505666', font: { size: 9 }, maxTicksLimit: 10 }, grid: { color: '#1e2129' } },
-          y: { ticks: { color: '#505666', font: { size: 9 }, callback: v => '
-</body>
-</html>
-+v.toFixed(0) }, grid: { color: '#1e2129' } }
+          y: { ticks: { color: '#505666', font: { size: 9 }, callback: v => '$'+v.toFixed(0) }, grid: { color: '#1e2129' } }
         }
       }
     });
