@@ -454,6 +454,34 @@ footer { margin-top:32px; padding:16px 0; border-top:1px solid var(--border); fo
 </style>
 </head>
 <body>
+<!-- AUTH GATE -->
+<div id="auth-gate" style="display:none;position:fixed;inset:0;z-index:9999;background:#0a0c0f;display:flex;align-items:center;justify-content:center;">
+  <div style="width:380px;padding:40px 36px;background:#111318;border:1px solid #1e2129;border-radius:8px;position:relative;z-index:1;">
+    <div style="font-size:11px;color:#00d4aa;letter-spacing:0.16em;text-transform:uppercase;margin-bottom:4px;">Global Intelligence Platform</div>
+    <div style="font-size:10px;color:#505666;margin-bottom:32px;">Classification: EYES ONLY — Access Required</div>
+    <div style="font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:#505666;margin-bottom:6px;">Authorization Code</div>
+    <input type="password" id="auth-pw" placeholder="Enter access code" autofocus
+      style="width:100%;background:#0a0c0f;border:1px solid #2d3140;border-radius:4px;color:#c8cdd6;font-family:'IBM Plex Mono',monospace;font-size:13px;padding:12px 14px;outline:none;"
+      onkeydown="if(event.key==='Enter')gipLogin()" onfocus="this.style.borderColor='#00d4aa'" onblur="this.style.borderColor='#2d3140'" />
+    <button onclick="gipLogin()" style="width:100%;margin-top:16px;padding:12px;background:rgba(0,212,170,0.1);border:1px solid rgba(0,212,170,0.3);color:#00d4aa;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;border-radius:4px;cursor:pointer;">Authenticate</button>
+    <div id="auth-err" style="font-size:10px;color:#e05c5c;margin-top:12px;display:none;">Access denied. Invalid authorization code.</div>
+    <div style="font-size:8px;color:#2d3140;text-align:center;margin-top:24px;letter-spacing:0.2em;text-transform:uppercase;">Unauthorized access is prohibited</div>
+  </div>
+</div>
+<script>
+function getCookie(n){const m=document.cookie.match(new RegExp('(^| )'+n+'=([^;]+)'));return m?m[2]:null;}
+if(!getCookie('gip_auth')){document.getElementById('auth-gate').style.display='flex';document.querySelector('.shell').style.display='none';}
+else{document.getElementById('auth-gate').style.display='none';}
+async function gipLogin(){
+  const pw=document.getElementById('auth-pw').value;
+  try{const r=await fetch('/api/auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw})});
+  const d=await r.json();
+  if(d.success){document.cookie='gip_auth=1;path=/;max-age=604800;SameSite=Lax';document.getElementById('auth-gate').style.display='none';document.querySelector('.shell').style.display='flex';}
+  else{document.getElementById('auth-err').style.display='block';}}
+  catch(e){document.getElementById('auth-err').style.display='block';}
+}
+</script>
+
 <div class="shell">
   <!-- Sidebar -->
   <nav class="sidebar">
@@ -1284,7 +1312,7 @@ async function loadCalendar() {
   const container = document.getElementById('cal-list');
   container.innerHTML = '<div style="color:var(--muted);font-size:11px"><span class="spinner-sm"></span> Loading…</div>';
   try {
-    const r = await fetch('/api/calendar');
+    const r = await fetch('/api/macro?mode=calendar');
     const d = await r.json();
     if (!d.events || !d.events.length) { container.innerHTML = '<div class="alert info"><span>◎</span><span>No upcoming events.</span></div>'; return; }
     container.innerHTML = d.events.map(ev => {

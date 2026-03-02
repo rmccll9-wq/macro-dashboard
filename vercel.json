@@ -1,20 +1,17 @@
 {
   "version": 2,
   "rewrites": [
-    { "source": "/api/fred", "destination": "/api/fred" },
-    { "source": "/api/analyze", "destination": "/api/analyze" },
-    { "source": "/api/search", "destination": "/api/search" },
-    { "source": "/api/news", "destination": "/api/news" },
-    { "source": "/api/calendar", "destination": "/api/calendar" },
-    { "source": "/api/macro", "destination": "/api/macro" },
+    { "source": "/api/ai", "destination": "/api/ai" },
+    { "source": "/api/auth", "destination": "/api/auth" },
     { "source": "/api/cape", "destination": "/api/cape" },
-    { "source": "/api/sentiment", "destination": "/api/sentiment" },
+    { "source": "/api/cascade", "destination": "/api/cascade" },
     { "source": "/api/earnings", "destination": "/api/earnings" },
     { "source": "/api/feargreed", "destination": "/api/feargreed" },
-    { "source": "/api/prices", "destination": "/api/prices" },
     { "source": "/api/intel", "destination": "/api/intel" },
-    { "source": "/api/briefing", "destination": "/api/briefing" },
-    { "source": "/api/signals", "destination": "/api/signals" },
-    { "source": "/api/newswire", "destination": "/api/newswire" }
+    { "source": "/api/macro", "destination": "/api/macro" },
+    { "source": "/api/newswire", "destination": "/api/newswire" },
+    { "source": "/api/prices", "destination": "/api/prices" },
+    { "source": "/api/sentiment", "destination": "/api/sentiment" },
+    { "source": "/api/signals", "destination": "/api/signals" }
   ]
 }
