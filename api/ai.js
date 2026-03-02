@@ -31,7 +31,7 @@ Format with clear sections. Be concise but thorough. No fluff.`;
       const r = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
-        body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 2000, system: systemPrompt, messages: [{ role: 'user', content: userMsg }] })
+        body: JSON.stringify({ model: 'claude-opus-4-6', max_tokens: 2000, system: systemPrompt, messages: [{ role: 'user', content: userMsg }] })
       });
       const data = await r.json();
       if (data.error) { res.status(400).json({ error: data.error.message }); return; }
