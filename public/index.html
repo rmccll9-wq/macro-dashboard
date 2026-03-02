@@ -162,8 +162,8 @@ body::before { content:''; position:fixed; inset:0; background-image: linear-gra
 .ai-input { flex:1; background:var(--bg); border:1px solid var(--border-lit); border-radius:4px; color:var(--text); font-family:'IBM Plex Mono',monospace; font-size:12px; padding:10px 14px; resize:none; }
 .ai-input:focus { outline:none; border-color:var(--accent); }
 .ai-input::placeholder { color:var(--muted); }
-.ai-output { background:var(--bg); border:1px solid var(--border); border-radius:4px; padding:16px; min-height:200px; font-size:12px; line-height:1.7; color:var(--text); white-space:pre-wrap; overflow-y:auto; max-height:500px; }
-.ai-output .placeholder { color:var(--muted); font-style:italic; }
+.ai-output { background:var(--bg); border:1px solid var(--border); border-radius:6px; min-height:200px; overflow-y:auto; max-height:600px; }
+.ai-output .placeholder { color:var(--muted); font-style:italic; padding:16px; display:block; font-size:12px; }
 .ai-presets { display:flex; gap:6px; margin-bottom:12px; flex-wrap:wrap; }
 .ai-presets .btn-ghost { font-size:10px; padding:5px 10px; }
 .spinner-sm { width:14px; height:14px; border:2px solid var(--border-lit); border-top-color:var(--accent); border-radius:50%; animation:spin 0.7s linear infinite; display:inline-block; }
@@ -320,7 +320,7 @@ footer { margin-top:32px; padding:16px 0; border-top:1px solid var(--border); fo
 .intel-header .classification.secret { background:rgba(245,166,35,0.12); color:var(--warn); border:1px solid rgba(245,166,35,0.3); }
 
 /* Briefing */
-.briefing-output { background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:24px; font-size:12px; line-height:1.8; color:var(--text); white-space:pre-wrap; overflow-y:auto; max-height:75vh; min-height:300px; }
+.briefing-output { background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:24px; font-size:12px; line-height:1.85; color:var(--text); overflow-y:auto; max-height:75vh; min-height:300px; }
 .briefing-output .placeholder { color:var(--muted); font-style:italic; }
 .briefing-meta { display:flex; gap:12px; align-items:center; margin-bottom:16px; flex-wrap:wrap; }
 .briefing-meta .timestamp { font-size:10px; color:var(--muted); }
@@ -330,7 +330,7 @@ footer { margin-top:32px; padding:16px 0; border-top:1px solid var(--border); fo
 .intel-cat-btn { background:transparent; border:1px solid var(--border-lit); color:var(--muted); font-family:'IBM Plex Mono',monospace; font-size:10px; padding:6px 12px; border-radius:3px; cursor:pointer; transition:all 0.15s; letter-spacing:0.06em; text-transform:uppercase; }
 .intel-cat-btn:hover { border-color:var(--text); color:var(--text); }
 .intel-cat-btn.active { border-color:var(--accent); color:var(--accent); background:rgba(0,212,170,0.06); }
-.intel-output { background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:20px; font-size:12px; line-height:1.8; color:var(--text); white-space:pre-wrap; overflow-y:auto; max-height:65vh; min-height:250px; }
+.intel-output { background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:20px; font-size:12px; line-height:1.85; color:var(--text); overflow-y:auto; max-height:65vh; min-height:250px; }
 .intel-output .placeholder { color:var(--muted); font-style:italic; }
 .intel-custom-row { display:flex; gap:10px; margin-bottom:16px; }
 .intel-custom-input { flex:1; background:var(--bg); border:1px solid var(--border-lit); border-radius:4px; color:var(--text); font-family:'IBM Plex Mono',monospace; font-size:12px; padding:10px 14px; }
@@ -373,8 +373,86 @@ footer { margin-top:32px; padding:16px 0; border-top:1px solid var(--border); fo
 .threat-5 { background:#ff3333; box-shadow:0 0 8px #ff3333; animation:pulse 0.8s infinite; }
 
 /* Signal Detection */
-.signal-output { background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:20px; font-size:12px; line-height:1.8; color:var(--text); white-space:pre-wrap; overflow-y:auto; max-height:65vh; min-height:250px; }
+.signal-output { background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:20px; font-size:12px; line-height:1.85; color:var(--text); overflow-y:auto; max-height:65vh; min-height:250px; }
 .signal-output .placeholder { color:var(--muted); font-style:italic; }
+
+/* ═══ INTEL FORMATTED TEXT ═══ */
+.intel-fmt { font-size:12px; line-height:1.85; color:var(--text); }
+.intel-fmt .if-divider { border:none; border-top:1px solid var(--border-lit); margin:16px 0; }
+.intel-fmt .if-section { font-size:10px; letter-spacing:0.14em; text-transform:uppercase; font-weight:600; margin:20px 0 8px; padding:6px 0; border-bottom:1px solid var(--border); }
+.intel-fmt .if-section.threat { color:var(--danger); }
+.intel-fmt .if-section.priority { color:var(--warn); }
+.intel-fmt .if-section.market { color:var(--accent); }
+.intel-fmt .if-section.geo { color:var(--accent2); }
+.intel-fmt .if-section.econ { color:var(--ok); }
+.intel-fmt .if-section.dev { color:var(--purple); }
+.intel-fmt .if-section.contrarian { color:#f59e0b; }
+.intel-fmt .if-section.outlook { color:var(--accent); }
+.intel-fmt .if-section.bottom { color:#e8ecf2; }
+.intel-fmt .if-section.signal { color:var(--warn); }
+.intel-fmt .if-header { font-size:11px; color:#e8ecf2; background:var(--surface); border:1px solid var(--border); border-radius:4px; padding:12px 16px; margin:16px 0 8px; letter-spacing:0.06em; text-align:center; }
+.intel-fmt .if-threat-5, .intel-fmt .if-threat-flash { color:var(--danger); font-weight:600; }
+.intel-fmt .if-threat-4, .intel-fmt .if-threat-critical { color:#ff6b6b; font-weight:600; }
+.intel-fmt .if-threat-3, .intel-fmt .if-threat-high { color:var(--warn); font-weight:500; }
+.intel-fmt .if-threat-2, .intel-fmt .if-threat-elevated { color:var(--accent2); }
+.intel-fmt .if-threat-1, .intel-fmt .if-threat-monitor { color:var(--ok); }
+.intel-fmt .if-tag { font-size:9px; letter-spacing:0.08em; padding:1px 6px; border-radius:2px; font-weight:600; display:inline-block; margin-right:4px; }
+.intel-fmt .if-tag-geo { background:rgba(0,180,216,0.12); color:var(--accent2); }
+.intel-fmt .if-tag-mil { background:rgba(224,92,92,0.15); color:#ff6b6b; }
+.intel-fmt .if-tag-econ { background:rgba(0,212,170,0.1); color:var(--accent); }
+.intel-fmt .if-tag-energy { background:rgba(245,166,35,0.12); color:var(--warn); }
+.intel-fmt .if-tag-cyber { background:rgba(167,139,250,0.15); color:var(--purple); }
+.intel-fmt .if-tag-market { background:rgba(0,212,170,0.1); color:var(--accent); }
+.intel-fmt .if-tag-tech { background:rgba(0,180,216,0.15); color:#7dd3fc; }
+.intel-fmt .if-tag-social { background:rgba(167,139,250,0.1); color:#c4b5fd; }
+.intel-fmt .if-bold { color:#e8ecf2; font-weight:600; }
+.intel-fmt .if-status-dev { color:var(--warn); font-size:10px; font-weight:500; }
+.intel-fmt .if-status-conf { color:var(--ok); font-size:10px; font-weight:500; }
+.intel-fmt .if-status-mon { color:var(--accent2); font-size:10px; font-weight:500; }
+.intel-fmt .if-source { color:var(--muted); font-size:10px; font-style:italic; }
+.intel-fmt .if-bottomline { font-size:13px; color:#e8ecf2; font-weight:600; line-height:1.6; padding:14px 16px; background:var(--surface); border-left:3px solid var(--accent); border-radius:4px; margin-top:16px; }
+.intel-fmt .if-emoji { font-size:14px; }
+.intel-fmt p { margin-bottom:10px; }
+.intel-fmt ul, .intel-fmt li { margin-left:16px; margin-bottom:4px; }
+
+/* ═══ THREAT BANNER — overall threat level header ═══ */
+.threat-banner { display:flex; align-items:stretch; border-radius:6px 6px 0 0; overflow:hidden; border:1px solid var(--border); border-bottom:none; }
+.threat-banner .tb-swatch { width:6px; flex-shrink:0; }
+.threat-banner .tb-body { flex:1; padding:14px 18px; background:var(--surface); display:flex; align-items:center; gap:20px; flex-wrap:wrap; }
+.threat-banner .tb-level { display:flex; align-items:center; gap:10px; }
+.threat-banner .tb-label { font-size:9px; letter-spacing:0.16em; text-transform:uppercase; color:var(--muted); }
+.threat-banner .tb-value { font-size:13px; font-weight:700; letter-spacing:0.08em; font-family:'IBM Plex Mono',monospace; }
+.threat-banner .tb-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.threat-banner .tb-meta { display:flex; gap:16px; margin-left:auto; }
+.threat-banner .tb-meta-item { font-size:9px; color:var(--muted); letter-spacing:0.08em; }
+.threat-banner .tb-meta-item span { color:#e8ecf2; font-weight:600; }
+.threat-banner .tb-regime { font-size:10px; color:#e8ecf2; letter-spacing:0.06em; background:rgba(255,255,255,0.04); padding:3px 8px; border-radius:3px; border:1px solid var(--border); }
+/* threat colors */
+.tb-CRITICAL .tb-swatch { background:#ff2222; }
+.tb-CRITICAL .tb-value { color:#ff2222; }
+.tb-CRITICAL .tb-dot { background:#ff2222; box-shadow:0 0 8px #ff2222; animation:pulse 0.8s infinite; }
+.tb-HIGH .tb-swatch { background:#ff6b35; }
+.tb-HIGH .tb-value { color:#ff6b35; }
+.tb-HIGH .tb-dot { background:#ff6b35; box-shadow:0 0 6px rgba(255,107,53,0.6); }
+.tb-ELEVATED .tb-swatch { background:var(--warn); }
+.tb-ELEVATED .tb-value { color:var(--warn); }
+.tb-ELEVATED .tb-dot { background:var(--warn); }
+.tb-MODERATE .tb-swatch { background:var(--accent2); }
+.tb-MODERATE .tb-value { color:var(--accent2); }
+.tb-MODERATE .tb-dot { background:var(--accent2); }
+.tb-LOW .tb-swatch { background:var(--ok); }
+.tb-LOW .tb-value { color:var(--ok); }
+.tb-LOW .tb-dot { background:var(--ok); }
+/* intel body area beneath banner */
+.intel-body { border:1px solid var(--border); border-top:none; border-radius:0 0 6px 6px; padding:20px; background:var(--bg); }
+/* inline threat pills on findings */
+.if-pill { display:inline-flex; align-items:center; gap:5px; font-size:9px; font-weight:700; letter-spacing:0.1em; padding:2px 7px; border-radius:3px; margin-right:6px; vertical-align:middle; font-family:'IBM Plex Mono',monospace; }
+.if-pill-CRITICAL { background:rgba(255,34,34,0.15); color:#ff4444; border:1px solid rgba(255,34,34,0.3); }
+.if-pill-HIGH { background:rgba(255,107,53,0.15); color:#ff6b35; border:1px solid rgba(255,107,53,0.3); }
+.if-pill-ELEVATED { background:rgba(245,166,35,0.12); color:var(--warn); border:1px solid rgba(245,166,35,0.25); }
+.if-pill-MODERATE { background:rgba(0,180,216,0.1); color:var(--accent2); border:1px solid rgba(0,180,216,0.2); }
+.if-pill-LOW { background:rgba(0,212,170,0.08); color:var(--ok); border:1px solid rgba(0,212,170,0.2); }
+.if-pill::before { content:''; width:5px; height:5px; border-radius:50%; background:currentColor; }
 
 /* ═══ CASCADE RISK CONTAGION ═══ */
 .cascade-input-row { display:flex; gap:10px; margin-bottom:16px; }
@@ -1030,6 +1108,122 @@ async function gipLogin(){
 </div>
 
 <script>
+/* ═══════════ INTEL TEXT FORMATTER ═══════════ */
+function formatIntel(raw) {
+  if (!raw) return '';
+
+  // ── Extract threat header metadata (OVERALL THREAT: / REGIME: / CONFIDENCE:)
+  let overallThreat = null, regime = null, confidence = null;
+  const threatMatch = raw.match(/OVERALL THREAT:\s*(CRITICAL|HIGH|ELEVATED|MODERATE|LOW)/i);
+  const regimeMatch = raw.match(/REGIME:\s*([^\n]+)/i);
+  const confMatch   = raw.match(/CONFIDENCE:\s*(HIGH|MEDIUM|LOW)/i);
+  if (threatMatch) overallThreat = threatMatch[1].toUpperCase();
+  if (regimeMatch) regime = regimeMatch[1].trim();
+  if (confMatch)   confidence = confMatch[1].toUpperCase();
+
+  // Remove the parsed header lines from body text
+  let body = raw
+    .replace(/OVERALL THREAT:\s*(CRITICAL|HIGH|ELEVATED|MODERATE|LOW)\s*\n?/gi, '')
+    .replace(/REGIME:\s*[^\n]+\n?/gi, '')
+    .replace(/CONFIDENCE:\s*(HIGH|MEDIUM|LOW)\s*\n?/gi, '');
+
+  // ── Build threat banner HTML ──
+  let bannerHtml = '';
+  if (overallThreat) {
+    const ts = new Date().toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', hour12:false });
+    const dateStr = new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }).toUpperCase();
+    const confColor = confidence === 'HIGH' ? 'var(--ok)' : confidence === 'MEDIUM' ? 'var(--warn)' : 'var(--danger)';
+    bannerHtml = `
+      <div class="threat-banner tb-${overallThreat}">
+        <div class="tb-swatch"></div>
+        <div class="tb-body">
+          <div class="tb-level">
+            <div class="tb-dot"></div>
+            <div>
+              <div class="tb-label">Overall Threat Level</div>
+              <div class="tb-value">${overallThreat}</div>
+            </div>
+          </div>
+          ${regime ? `<div class="tb-regime">${regime}</div>` : ''}
+          <div class="tb-meta">
+            ${confidence ? `<div class="tb-meta-item">CONFIDENCE <span style="color:${confColor}">${confidence}</span></div>` : ''}
+            <div class="tb-meta-item">GENERATED <span>${dateStr} · ${ts}Z</span></div>
+            <div class="tb-meta-item">CLASSIFICATION <span>EYES ONLY</span></div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  // ── Format body text ──
+  let t = body
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    // Divider lines
+    .replace(/^[═]{3,}$/gm, '<hr class="if-divider">')
+    // Roman numeral section headers
+    .replace(/^(I{1,3}V?I{0,3}|VI{0,3}|IX|X)\.\s+(.+)$/gm, (m,num,title) => {
+      let cls = 'if-section';
+      const tl = title.toLowerCase();
+      if (tl.includes('threat') || tl.includes('risk')) cls += ' threat';
+      else if (tl.includes('priority')) cls += ' priority';
+      else if (tl.includes('market') || tl.includes('equity') || tl.includes('equit')) cls += ' market';
+      else if (tl.includes('geopolitical') || tl.includes('geo')) cls += ' geo';
+      else if (tl.includes('economic') || tl.includes('signal') || tl.includes('rate') || tl.includes('credit')) cls += ' econ';
+      else if (tl.includes('developing')) cls += ' dev';
+      else if (tl.includes('contrarian')) cls += ' contrarian';
+      else if (tl.includes('outlook') || tl.includes('24') || tl.includes('watch')) cls += ' outlook';
+      else if (tl.includes('analog') || tl.includes('historical')) cls += ' market';
+      else if (tl.includes('regime') || tl.includes('assessment')) cls += ' econ';
+      return `<div class="${cls}">${num}. ${title}</div>`;
+    })
+    // BOTTOM LINE callout
+    .replace(/^BOTTOM LINE:?\s*(.+)$/gim, '<div class="if-bottomline">⬥ BOTTOM LINE: $1</div>')
+    // Inline threat pills [CRITICAL] [HIGH] [ELEVATED] [MODERATE] [LOW]
+    .replace(/\[(CRITICAL|HIGH|ELEVATED|MODERATE|LOW)\]/gi, (m, tier) =>
+      `<span class="if-pill if-pill-${tier.toUpperCase()}">${tier.toUpperCase()}</span>`)
+    // Legacy numeric threat tags
+    .replace(/\[5\]|\[FLASH\]/gi, '<span class="if-pill if-pill-CRITICAL">CRITICAL</span>')
+    .replace(/\[4\]/gi, '<span class="if-pill if-pill-HIGH">HIGH</span>')
+    .replace(/\[3\]/gi, '<span class="if-pill if-pill-ELEVATED">ELEVATED</span>')
+    .replace(/\[2\]/gi, '<span class="if-pill if-pill-MODERATE">MODERATE</span>')
+    .replace(/\[1\]|\[MONITOR\]/gi, '<span class="if-pill if-pill-LOW">LOW</span>')
+    // Category tags
+    .replace(/\[GEOPOLITICAL\]/gi, '<span class="if-tag if-tag-geo">GEOPOLITICAL</span>')
+    .replace(/\[MILITARY\]/gi, '<span class="if-tag if-tag-mil">MILITARY</span>')
+    .replace(/\[ECONOMIC\]/gi, '<span class="if-tag if-tag-econ">ECONOMIC</span>')
+    .replace(/\[ENERGY\]/gi, '<span class="if-tag if-tag-energy">ENERGY</span>')
+    .replace(/\[CYBER\]/gi, '<span class="if-tag if-tag-cyber">CYBER</span>')
+    .replace(/\[MARKET\]/gi, '<span class="if-tag if-tag-market">MARKET</span>')
+    .replace(/\[TECH\]/gi, '<span class="if-tag if-tag-tech">TECH</span>')
+    .replace(/\[SOCIAL\]/gi, '<span class="if-tag if-tag-social">SOCIAL</span>')
+    // Status markers
+    .replace(/Status:\s*DEVELOPING/gi, '<span class="if-status-dev">⟐ DEVELOPING</span>')
+    .replace(/Status:\s*CONFIRMED/gi, '<span class="if-status-conf">✓ CONFIRMED</span>')
+    .replace(/Status:\s*MONITORING/gi, '<span class="if-status-mon">◎ MONITORING</span>')
+    // Source lines
+    .replace(/^Source:\s*(.+)$/gm, '<div class="if-source">Source: $1</div>')
+    // Implications
+    .replace(/^(Implications?:)\s*(.+)$/gm, '<span class="if-bold">$1</span> $2')
+    // Confidence labels
+    .replace(/Confidence:\s*(HIGH)/gi, 'Confidence: <span style="color:var(--ok);font-weight:600;">HIGH</span>')
+    .replace(/Confidence:\s*(MEDIUM)/gi, 'Confidence: <span style="color:var(--warn);font-weight:600;">MEDIUM</span>')
+    .replace(/Confidence:\s*(LOW)/gi, 'Confidence: <span style="color:var(--danger);font-weight:600;">LOW</span>')
+    // Signal dots
+    .replace(/🔴/g, '<span class="if-emoji" style="color:var(--danger)">●</span>')
+    .replace(/🟡/g, '<span class="if-emoji" style="color:var(--warn)">●</span>')
+    .replace(/🟢/g, '<span class="if-emoji" style="color:var(--ok)">●</span>')
+    // Bold **text**
+    .replace(/\*\*(.+?)\*\*/g, '<span class="if-bold">$1</span>')
+    .replace(/__(.+?)__/g, '<span class="if-bold">$1</span>')
+    // ALL-CAPS headline — pattern
+    .replace(/^([A-Z][A-Z\s&\/,]{3,})\s*[—–-]{1,3}\s*/gm, '<span class="if-bold" style="color:#e8ecf2;">$1</span> — ')
+    // Newlines
+    .replace(/\n{3,}/g, '\n\n')
+    .replace(/\n/g, '<br>');
+
+  const bodyHtml = `<div class="intel-body"><div class="intel-fmt">${t}</div></div>`;
+  return bannerHtml + bodyHtml;
+}
+
 /* ═══════════ STATE ═══════════ */
 const live = {};
 let extendedData = {};
@@ -1262,7 +1456,7 @@ async function runAI() {
     });
     const d = await r.json();
     if (d.error) throw new Error(d.error);
-    output.textContent = d.analysis;
+    output.innerHTML = formatIntel(d.analysis);
     document.getElementById('ai-status').textContent = 'Complete';
   } catch(e) {
     output.innerHTML = `<span style="color:var(--danger)">Error: ${e.message}</span>`;
@@ -1974,7 +2168,7 @@ async function generateBriefing() {
     const r = await fetch('/api/ai', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ type: 'briefing', macroData: window.macroSnapshot || null }) });
     const d = await r.json();
     if (d.error) throw new Error(d.error);
-    output.textContent = d.briefing;
+    output.innerHTML = formatIntel(d.briefing);
     ts.textContent = 'Generated: ' + new Date(d.timestamp).toLocaleString();
   } catch(e) { output.textContent = 'Error: ' + e.message; }
   btn.disabled = false; spinner.style.display = 'none';
@@ -1992,7 +2186,7 @@ async function runIntel(category, btnEl) {
     const r = await fetch('/api/intel', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ category }) });
     const d = await r.json();
     if (d.error) throw new Error(d.error);
-    output.textContent = d.intel;
+    output.innerHTML = formatIntel(d.intel);
     ts.textContent = 'Updated: ' + new Date(d.timestamp).toLocaleString();
   } catch(e) { output.textContent = 'Error: ' + e.message; }
   spinner.style.display = 'none';
@@ -2010,7 +2204,7 @@ async function runIntelCustom() {
     const r = await fetch('/api/intel', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ customQuery: q }) });
     const d = await r.json();
     if (d.error) throw new Error(d.error);
-    output.textContent = d.intel;
+    output.innerHTML = formatIntel(d.intel);
     ts.textContent = 'Updated: ' + new Date(d.timestamp).toLocaleString();
   } catch(e) { output.textContent = 'Error: ' + e.message; }
   spinner.style.display = 'none';
