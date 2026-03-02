@@ -1990,10 +1990,7 @@ async function runBacktest() {
     const stats = [
       { label:'Total Return', val: (res.totalReturn>=0?'+':'')+res.totalReturn.toFixed(2)+'%', color: res.totalReturn>=0?'var(--ok)':'var(--danger)' },
       { label:'Buy & Hold', val: (res.bhReturn>=0?'+':'')+res.bhReturn.toFixed(2)+'%', color: res.bhReturn>=0?'var(--ok)':'var(--danger)' },
-      { label:'Final Value', val: '
-</body>
-</html>
-+res.finalEquity.toFixed(0), color:'#e8ecf2' },
+      { label:'Final Value', val: '$'+res.finalEquity.toFixed(0), color:'#e8ecf2' },
       { label:'Sharpe Ratio', val: res.sharpe, color: +res.sharpe>1?'var(--ok)':+res.sharpe>0?'var(--warn)':'var(--danger)' },
       { label:'Max Drawdown', val: '-'+res.maxDD.toFixed(1)+'%', color: res.maxDD<10?'var(--ok)':res.maxDD<20?'var(--warn)':'var(--danger)' },
       { label:'Win Rate', val: res.trades.length ? Math.round(res.wins.length/res.trades.length*100)+'%' : 'N/A', color:'#e8ecf2' },
