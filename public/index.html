@@ -375,6 +375,76 @@ footer { margin-top:32px; padding:16px 0; border-top:1px solid var(--border); fo
 /* Signal Detection */
 .signal-output { background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:20px; font-size:12px; line-height:1.8; color:var(--text); white-space:pre-wrap; overflow-y:auto; max-height:65vh; min-height:250px; }
 .signal-output .placeholder { color:var(--muted); font-style:italic; }
+
+/* ═══ CASCADE RISK CONTAGION ═══ */
+.cascade-input-row { display:flex; gap:10px; margin-bottom:16px; }
+.cascade-event-input { flex:1; background:var(--bg); border:1px solid var(--border-lit); border-radius:4px; color:var(--text); font-family:'IBM Plex Mono',monospace; font-size:12px; padding:12px 16px; }
+.cascade-event-input:focus { outline:none; border-color:var(--accent); }
+.cascade-event-input::placeholder { color:var(--muted); }
+.cascade-presets { display:flex; gap:6px; margin-bottom:20px; flex-wrap:wrap; }
+.cascade-preset { background:transparent; border:1px solid var(--border-lit); color:var(--muted); font-family:'IBM Plex Mono',monospace; font-size:9px; padding:5px 10px; border-radius:3px; cursor:pointer; transition:all 0.15s; letter-spacing:0.04em; }
+.cascade-preset:hover { border-color:var(--warn); color:var(--warn); }
+
+.cascade-container { background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:24px; overflow-x:auto; min-height:300px; }
+.cascade-container .placeholder { color:var(--muted); font-style:italic; font-size:12px; }
+.cascade-summary { display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--border); border:1px solid var(--border); border-radius:6px; overflow:hidden; margin-bottom:20px; }
+.cascade-summary .cs-item { background:var(--surface); padding:14px 16px; }
+.cascade-summary .cs-label { font-size:9px; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted); }
+.cascade-summary .cs-val { font-size:20px; font-weight:600; color:#e8ecf2; margin-top:4px; }
+.cascade-summary .cs-val.severe { color:var(--danger); }
+.cascade-summary .cs-val.high { color:#ff6b6b; }
+.cascade-summary .cs-val.elevated { color:var(--warn); }
+.cascade-summary .cs-val.guarded { color:var(--accent2); }
+.cascade-summary .cs-val.low { color:var(--ok); }
+
+.cascade-tree { position:relative; }
+.cascade-node { margin-bottom:8px; }
+.cascade-node-header { display:flex; align-items:flex-start; gap:10px; padding:12px 16px; background:var(--surface); border:1px solid var(--border); border-radius:6px; cursor:pointer; transition:all 0.15s; }
+.cascade-node-header:hover { border-color:var(--border-lit); background:var(--surface2); }
+.cascade-node-header.expanded { border-color:var(--accent); border-bottom-left-radius:0; border-bottom-right-radius:0; }
+.cascade-node-id { font-size:9px; font-weight:600; color:var(--accent); background:rgba(0,212,170,0.1); padding:2px 6px; border-radius:2px; white-space:nowrap; margin-top:2px; }
+.cascade-node-body { flex:1; }
+.cascade-node-effect { font-size:12px; color:#e8ecf2; line-height:1.4; }
+.cascade-node-meta { display:flex; gap:8px; margin-top:6px; flex-wrap:wrap; align-items:center; }
+.cascade-node-domain { font-size:9px; letter-spacing:0.08em; padding:2px 6px; border-radius:2px; font-weight:600; }
+.cascade-node-domain.ENERGY { background:rgba(245,166,35,0.12); color:var(--warn); }
+.cascade-node-domain.FINANCIAL { background:rgba(0,212,170,0.1); color:var(--accent); }
+.cascade-node-domain.MILITARY { background:rgba(224,92,92,0.15); color:#ff6b6b; }
+.cascade-node-domain.TRADE { background:rgba(0,180,216,0.12); color:var(--accent2); }
+.cascade-node-domain.COMMODITY { background:rgba(245,166,35,0.15); color:#f5a623; }
+.cascade-node-domain.CYBER { background:rgba(167,139,250,0.15); color:var(--purple); }
+.cascade-node-domain.POLITICAL { background:rgba(100,110,130,0.15); color:var(--muted); }
+.cascade-node-domain.DIPLOMATIC { background:rgba(0,180,216,0.1); color:var(--accent2); }
+.cascade-node-domain.SOCIAL { background:rgba(167,139,250,0.1); color:#c4b5fd; }
+.cascade-node-domain.TECHNOLOGY { background:rgba(0,180,216,0.15); color:#7dd3fc; }
+.cascade-prob { font-size:10px; color:var(--muted); }
+.cascade-prob-bar { width:40px; height:4px; background:var(--border); border-radius:2px; display:inline-block; vertical-align:middle; margin-left:2px; position:relative; }
+.cascade-prob-fill { height:100%; border-radius:2px; position:absolute; left:0; top:0; }
+.cascade-sev { font-size:10px; padding:1px 6px; border-radius:2px; }
+.cascade-sev.crit { background:rgba(224,92,92,0.2); color:var(--danger); }
+.cascade-sev.high { background:rgba(245,166,35,0.15); color:var(--warn); }
+.cascade-sev.med { background:rgba(0,180,216,0.1); color:var(--accent2); }
+.cascade-sev.low { background:rgba(76,175,125,0.1); color:var(--ok); }
+.cascade-time { font-size:10px; color:var(--muted); }
+.cascade-trigger { font-size:10px; color:var(--muted); margin-top:6px; padding:6px 10px; background:var(--bg); border-radius:3px; border-left:2px solid var(--warn); line-height:1.4; }
+.cascade-trigger b { color:var(--warn); font-weight:500; }
+.cascade-children { margin-left:24px; padding-left:16px; border-left:1px solid var(--border-lit); margin-top:0; }
+.cascade-children .cascade-node-header { background:var(--bg); }
+.cascade-children .cascade-children .cascade-node-header { background:color-mix(in srgb, var(--bg) 80%, var(--surface)); border-color:var(--border); }
+.cascade-children .cascade-children .cascade-node-id { color:var(--purple); background:rgba(167,139,250,0.1); }
+
+.cascade-section { margin-top:24px; padding:16px; background:var(--surface); border:1px solid var(--border); border-radius:6px; }
+.cascade-section-title { font-size:10px; letter-spacing:0.15em; text-transform:uppercase; color:var(--danger); margin-bottom:10px; display:flex; align-items:center; gap:6px; }
+.cascade-section-title.warn-title { color:var(--warn); }
+.cascade-section-title.info-title { color:var(--accent); }
+.cascade-blackswan { padding:10px 14px; margin-bottom:6px; background:var(--bg); border:1px solid rgba(224,92,92,0.2); border-radius:4px; }
+.cascade-blackswan .bs-scenario { font-size:12px; color:#e8ecf2; line-height:1.4; }
+.cascade-blackswan .bs-chain { font-size:10px; color:var(--muted); margin-top:4px; }
+.cascade-blackswan .bs-meta { display:flex; gap:8px; margin-top:6px; font-size:10px; }
+.cascade-convergence { font-size:12px; color:var(--text); line-height:1.6; padding:6px 0; border-bottom:1px solid var(--border); }
+.cascade-convergence:last-child { border-bottom:none; }
+.cascade-bottomline { font-size:13px; color:#e8ecf2; line-height:1.6; padding:14px 16px; background:var(--bg); border:1px solid var(--accent); border-radius:6px; margin-top:20px; }
+.cascade-raw { font-size:12px; line-height:1.8; white-space:pre-wrap; color:var(--text); }
 </style>
 </head>
 <body>
@@ -392,6 +462,7 @@ footer { margin-top:32px; padding:16px 0; border-top:1px solid var(--border); fo
     <div class="nav-item" onclick="showPage('briefing')"><span class="icon">📋</span> Daily Brief</div>
     <div class="nav-item" onclick="showPage('sigint')"><span class="icon">📡</span> SIGINT Feed</div>
     <div class="nav-item" onclick="showPage('sigdetect')"><span class="icon">🎯</span> Signal Detection</div>
+    <div class="nav-item" onclick="showPage('cascade')"><span class="icon">🔺</span> CASCADE Risk</div>
     <div class="nav-item" onclick="showPage('newswire')"><span class="icon">🌐</span> Global Newswire</div>
     <div class="nav-item" onclick="showPage('ai')"><span class="icon">⬡</span> AI Analysis</div>
     <div class="nav-item" onclick="showPage('search')"><span class="icon">◎</span> Web Intel</div>
@@ -860,6 +931,34 @@ footer { margin-top:32px; padding:16px 0; border-top:1px solid var(--border); fo
         <div style="overflow-x:auto">
           <table class="bt-trades-table" id="bt-trades-table"></table>
         </div>
+      </div>
+    </div>
+
+    <!-- ============ PAGE: CASCADE RISK CONTAGION ============ -->
+    <div class="page" id="page-cascade">
+      <div class="intel-header">
+        <h1>CASCADE Risk Model</h1>
+        <span class="classification eyes-only">CONTAGION ANALYSIS</span>
+      </div>
+      <p style="font-size:11px;color:var(--muted);margin-bottom:16px">Geopolitical risk contagion engine. Enter any global event and map the cascading 2nd, 3rd, and 4th-order consequences across energy, financial, military, trade, cyber, and political domains.</p>
+      <div class="cascade-input-row">
+        <input type="text" class="cascade-event-input" id="cascade-event" placeholder="Enter a triggering event… e.g. 'Iran drone strikes on Qatar LNG facilities'" />
+        <button class="btn btn-primary" id="cascade-btn" onclick="runCascade()">Analyze</button>
+        <span class="spinner-sm" id="cascade-spinner" style="display:none"></span>
+      </div>
+      <div class="cascade-presets">
+        <button class="cascade-preset" onclick="setCascadePreset('US-China military confrontation in Taiwan Strait')">Taiwan Strait</button>
+        <button class="cascade-preset" onclick="setCascadePreset('Iran closes the Strait of Hormuz to all shipping')">Hormuz Closure</button>
+        <button class="cascade-preset" onclick="setCascadePreset('Coordinated cyber attack disables major US banking infrastructure')">US Bank Cyber Attack</button>
+        <button class="cascade-preset" onclick="setCascadePreset('China announces immediate halt of rare earth exports to the US')">Rare Earth Embargo</button>
+        <button class="cascade-preset" onclick="setCascadePreset('Russia cuts all natural gas flows to Europe simultaneously')">EU Gas Cutoff</button>
+        <button class="cascade-preset" onclick="setCascadePreset('Saudi Arabia abandons the US dollar peg')">Saudi De-peg</button>
+        <button class="cascade-preset" onclick="setCascadePreset('Major US crop failure from extreme drought across the Midwest')">US Crop Failure</button>
+        <button class="cascade-preset" onclick="setCascadePreset('TSMC fabrication facilities in Taiwan disabled by earthquake')">TSMC Disruption</button>
+      </div>
+      <div id="cascade-summary-container"></div>
+      <div class="cascade-container" id="cascade-output">
+        <span class="placeholder">Enter an event and click "Analyze" to generate a cascading risk contagion tree. The model maps how consequences ripple through interconnected global systems — the second and third-order effects most analysts miss.</span>
       </div>
     </div>
 
@@ -2084,6 +2183,164 @@ async function runBacktest() {
   } finally {
     document.getElementById('bt-run-btn').disabled=false;
   }
+}
+
+/* ═══════════ CASCADE RISK CONTAGION ═══════════ */
+function setCascadePreset(text) {
+  document.getElementById('cascade-event').value = text;
+}
+
+async function runCascade() {
+  const event = document.getElementById('cascade-event').value.trim();
+  if (!event) return;
+  const btn = document.getElementById('cascade-btn');
+  const spinner = document.getElementById('cascade-spinner');
+  const output = document.getElementById('cascade-output');
+  const summaryC = document.getElementById('cascade-summary-container');
+  btn.disabled = true; spinner.style.display = 'inline-block';
+  output.innerHTML = '<span class="placeholder">Running CASCADE contagion analysis… Searching live sources and building risk tree. This takes 30-60 seconds.</span>';
+  summaryC.innerHTML = '';
+
+  try {
+    const r = await fetch('/api/cascade', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ event, macroData: window.macroSnapshot || null })
+    });
+    const d = await r.json();
+    if (d.error) throw new Error(d.error);
+
+    if (d.cascade) {
+      renderCascade(d.cascade);
+    } else if (d.raw) {
+      output.innerHTML = `<div class="cascade-raw">${d.raw}</div>`;
+    }
+  } catch(e) {
+    output.innerHTML = `<div class="alert danger"><span>✗</span><span>${e.message}</span></div>`;
+  } finally {
+    btn.disabled = false; spinner.style.display = 'none';
+  }
+}
+
+function renderCascade(c) {
+  const summaryC = document.getElementById('cascade-summary-container');
+  const output = document.getElementById('cascade-output');
+
+  // Threat level styling
+  const tl = (c.overall_threat_level || 'GUARDED').toLowerCase();
+  const tlColors = { severe:'var(--danger)', high:'#ff6b6b', elevated:'var(--warn)', guarded:'var(--accent2)', low:'var(--ok)' };
+  const tlColor = tlColors[tl] || 'var(--muted)';
+  const nodeCount = (c.cascades || []).length;
+  const domains = [...new Set((c.cascades || []).map(n => n.domain))];
+  const avgProb = nodeCount ? Math.round((c.cascades || []).reduce((a,n) => a + (n.probability||0), 0) / nodeCount) : 0;
+
+  // Summary bar
+  summaryC.innerHTML = `<div class="cascade-summary">
+    <div class="cs-item"><div class="cs-label">Threat Level</div><div class="cs-val ${tl}" style="color:${tlColor}">${(c.overall_threat_level||'N/A').toUpperCase()}</div></div>
+    <div class="cs-item"><div class="cs-label">Confidence</div><div class="cs-val">${c.confidence || '—'}%</div></div>
+    <div class="cs-item"><div class="cs-label">Cascade Nodes</div><div class="cs-val">${nodeCount}</div></div>
+    <div class="cs-item"><div class="cs-label">Domains Hit</div><div class="cs-val">${domains.length}</div></div>
+  </div>`;
+
+  let html = '';
+
+  // Trigger header
+  html += `<div style="margin-bottom:20px;padding:14px 16px;background:var(--surface);border:1px solid ${tlColor};border-radius:6px;">
+    <div style="font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:${tlColor};margin-bottom:4px;">TRIGGERING EVENT</div>
+    <div style="font-size:13px;color:#e8ecf2;line-height:1.4;">${c.trigger || 'Unknown'}</div>
+    <div style="font-size:10px;color:var(--muted);margin-top:6px;">${c.time_horizon || ''}</div>
+  </div>`;
+
+  // Build tree — organize by order
+  const nodes = c.cascades || [];
+  const orders = [1,2,3,4];
+  const orderLabels = {1:'FIRST-ORDER EFFECTS (Direct Consequences)', 2:'SECOND-ORDER EFFECTS (Downstream Ripples)', 3:'THIRD-ORDER EFFECTS (Systemic Contagion)', 4:'FOURTH-ORDER EFFECTS (Deep Cascade)'};
+
+  orders.forEach(ord => {
+    const orderNodes = nodes.filter(n => n.order === ord);
+    if (!orderNodes.length) return;
+    html += `<div class="cascade-section-title" style="margin-top:20px;margin-bottom:10px;font-size:10px;letter-spacing:0.12em;color:var(--accent);text-transform:uppercase;">${orderLabels[ord] || 'ORDER '+ord}</div>`;
+    orderNodes.forEach(n => {
+      const sevColors = ['','var(--ok)','var(--accent2)','var(--warn)','#ff6b6b','var(--danger)'];
+      const sevLabels = ['','LOW','MODERATE','HIGH','CRITICAL','CATASTROPHIC'];
+      const sev = n.severity || 1;
+      const probColor = n.probability >= 80 ? 'var(--danger)' : n.probability >= 60 ? 'var(--warn)' : n.probability >= 40 ? 'var(--accent2)' : 'var(--muted)';
+      const domainClass = n.domain || 'UNKNOWN';
+
+      html += `<div class="cascade-node">
+        <div class="cascade-node-header" onclick="this.classList.toggle('expanded');this.nextElementSibling&&this.nextElementSibling.classList.toggle('show');">
+          <div class="cascade-node-id">${n.id || '?'}</div>
+          <div class="cascade-node-body">
+            <div class="cascade-node-effect">${n.effect || ''}</div>
+            <div class="cascade-node-meta">
+              <span class="cascade-node-domain ${domainClass}">${domainClass}</span>
+              <span style="font-size:10px;color:${probColor}">⬤ ${n.probability||0}% probable</span>
+              <span style="font-size:10px;color:${sevColors[sev]}">SEV ${sev} — ${sevLabels[sev]}</span>
+              <span style="font-size:10px;color:var(--muted)">${n.timeframe||''}</span>
+              ${n.parent ? `<span style="font-size:9px;color:var(--muted)">← from ${n.parent}</span>` : ''}
+            </div>
+          </div>
+        </div>
+        <div class="cascade-node-detail" style="display:none;padding:10px 16px 12px 44px;background:var(--surface2);border:1px solid var(--border);border-top:0;border-radius:0 0 6px 6px;font-size:11px;line-height:1.6;">
+          ${n.watch_trigger ? `<div style="margin-bottom:6px;"><span style="color:var(--warn);font-weight:600;">⊳ WATCH TRIGGER:</span> <span style="color:var(--text);">${n.watch_trigger}</span></div>` : ''}
+          ${n.current_status ? `<div><span style="color:var(--accent);font-weight:600;">⊳ CURRENT STATUS:</span> <span style="color:var(--text);">${n.current_status}</span></div>` : ''}
+        </div>
+      </div>`;
+    });
+  });
+
+  // Convergence Points
+  if (c.convergence_points && c.convergence_points.length) {
+    html += `<div class="cascade-section-title info-title" style="margin-top:24px;margin-bottom:10px;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--danger);">⚠ CONVERGENCE POINTS (Highest Risk Nodes)</div>`;
+    html += `<div style="background:var(--surface);border:1px solid rgba(224,92,92,0.3);border-radius:6px;padding:16px;">`;
+    c.convergence_points.forEach(cp => {
+      html += `<div class="cascade-convergence">
+        <div style="font-size:12px;color:#e8ecf2;font-weight:500;">⬥ ${cp.description || ''}</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:4px;">Feeding nodes: ${(cp.feeding_nodes||[]).join(', ')}</div>
+        <div style="font-size:11px;color:var(--warn);margin-top:4px;">${cp.risk_multiplier || ''}</div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  // Black Swans
+  if (c.black_swans && c.black_swans.length) {
+    html += `<div class="cascade-section-title" style="margin-top:24px;margin-bottom:10px;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--purple);">🦢 BLACK SWAN AMPLIFIERS</div>`;
+    c.black_swans.forEach(bs => {
+      html += `<div class="cascade-blackswan">
+        <div class="bs-scenario">${bs.scenario || ''}</div>
+        <div class="bs-chain">${bs.impact || ''}</div>
+        <div class="bs-meta">
+          <span style="color:var(--warn)">P: ${bs.probability||'?'}%</span>
+          <span style="color:var(--muted)">${bs.acceleration || ''}</span>
+        </div>
+      </div>`;
+    });
+  }
+
+  // Contrarian View
+  if (c.contrarian_view) {
+    html += `<div class="cascade-section-title" style="margin-top:24px;margin-bottom:10px;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--accent2);">🔄 CONTRARIAN VIEW</div>`;
+    html += `<div style="padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:6px;font-size:12px;color:var(--text);line-height:1.6;">${c.contrarian_view}</div>`;
+  }
+
+  // Bottom Line
+  if (c.bottom_line) {
+    html += `<div class="cascade-bottomline">⬥ BOTTOM LINE: ${c.bottom_line}</div>`;
+  }
+
+  output.innerHTML = `<div class="cascade-tree">${html}</div>`;
+
+  // Wire up expand/collapse
+  output.querySelectorAll('.cascade-node-header').forEach(h => {
+    h.addEventListener('click', () => {
+      const detail = h.nextElementSibling;
+      if (detail && detail.classList.contains('cascade-node-detail')) {
+        const showing = detail.style.display !== 'none';
+        detail.style.display = showing ? 'none' : 'block';
+      }
+    });
+  });
 }
 </script>
 </body>
