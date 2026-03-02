@@ -29,8 +29,8 @@ Rules: 12-20 nodes across 5+ domains. Use id format "1","1.1","1.2","2","2.1" et
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 5000,
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 4000,
         system: systemPrompt,
         tools: [{ type: 'web_search_20250305', name: 'web_search' }],
         messages: [{ role: 'user', content: userMsg }]
