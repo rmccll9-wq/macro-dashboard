@@ -315,6 +315,10 @@ footer { margin-top:32px; padding:16px 0; border-top:1px solid var(--border); fo
 .mobile-nav .mob-item.active { color:var(--accent); border-bottom-color:var(--accent); }
 .mobile-nav .mob-item .icon { font-size:15px; line-height:1; }
 .mobile-nav .mob-sep { width:1px; background:var(--border); margin:8px 0; flex-shrink:0; }
+.mob-theme-row { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; padding:6px 10px; flex-shrink:0; }
+.mob-theme-dot { width:16px; height:16px; border-radius:50%; border:2px solid; cursor:pointer; transition:transform 0.15s, outline 0.15s; flex-shrink:0; }
+.mob-theme-dot:hover { transform:scale(1.2); }
+.mob-theme-dot.active { outline:2px solid var(--accent); outline-offset:2px; }
 
 /* ═══ INTELLIGENCE PLATFORM STYLES ═══ */
 .intel-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; flex-wrap:wrap; gap:10px; }
@@ -1124,6 +1128,13 @@ async function gipLogin(){
     <div class="mob-item" onclick="showPage('backtest')"><span class="icon">▤</span>BT</div>
     <div class="mob-sep"></div>
     <div class="mob-item" onclick="showPage('settings')"><span class="icon">⚙</span>Settings</div>
+    <div class="mob-sep"></div>
+    <div class="mob-theme-row">
+      <div class="mob-theme-dot" onclick="setTheme('dark')" id="mob-theme-dark" title="Dark" style="background:#0a0c0f;border-color:#2d3140"></div>
+      <div class="mob-theme-dot" onclick="setTheme('light')" id="mob-theme-light" title="Light" style="background:#f0f2f5;border-color:#c8cdd6"></div>
+      <div class="mob-theme-dot" onclick="setTheme('deepblue')" id="mob-theme-deepblue" title="Deep Blue" style="background:#0c1228;border-color:#243060"></div>
+      <div class="mob-theme-dot" onclick="setTheme('crimson')" id="mob-theme-crimson" title="Crimson" style="background:#1a1010;border-color:#442828"></div>
+    </div>
   </div>
 </div>
 
@@ -1955,6 +1966,10 @@ function setTheme(theme) {
   document.querySelectorAll('.theme-dot').forEach(d => d.style.outline = 'none');
   const active = document.getElementById('theme-' + theme);
   if (active) active.style.outline = '2px solid var(--accent)';
+  // Sync mobile theme dots
+  document.querySelectorAll('.mob-theme-dot').forEach(d => d.classList.remove('active'));
+  const mobActive = document.getElementById('mob-theme-' + theme);
+  if (mobActive) mobActive.classList.add('active');
   // Update TradingView widgets for theme (they need to be recreated)
   // Skip for performance — they'll pick up on next page load
 }
