@@ -10,6 +10,11 @@
     { "source": "/api/cape", "destination": "/api/cape" },
     { "source": "/api/sentiment", "destination": "/api/sentiment" },
     { "source": "/api/earnings", "destination": "/api/earnings" },
-    { "source": "/api/feargreed", "destination": "/api/feargreed" }
+    { "source": "/api/feargreed", "destination": "/api/feargreed" },
+    { "source": "/api/prices", "destination": "/api/prices" },
+    { "source": "/api/intel", "destination": "/api/intel" },
+    { "source": "/api/briefing", "destination": "/api/briefing" },
+    { "source": "/api/signals", "destination": "/api/signals" },
+    { "source": "/api/newswire", "destination": "/api/newswire" }
   ]
 }
