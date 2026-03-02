@@ -923,7 +923,7 @@ function showPage(id) {
 
 /* ═══════════ FRED FETCH ═══════════ */
 async function fredFetch(seriesId, apiKey, limit = 2) {
-  const r = await fetch(`/api/fred?series_id=${seriesId}&api_key=${apiKey}&sort_order=desc&limit=${limit}`);
+  const r = await fetch(`/api/macro?series_id=${seriesId}&api_key=${apiKey}&sort_order=desc&limit=${limit}`);
   if (!r.ok) throw new Error(`HTTP ${r.status} for ${seriesId}`);
   const d = await r.json();
   if (d.error_message) throw new Error(d.error_message);
@@ -1122,10 +1122,10 @@ async function runAI() {
   };
 
   try {
-    const r = await fetch('/api/analyze', {
+    const r = await fetch('/api/ai', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ macroData, question })
+      body: JSON.stringify({ type: 'analyze', macroData, question })
     });
     const d = await r.json();
     if (d.error) throw new Error(d.error);
@@ -1159,10 +1159,10 @@ async function runSearch() {
   output.innerHTML = '<span style="color:var(--muted)">Searching the web…</span>';
 
   try {
-    const r = await fetch('/api/search', {
+    const r = await fetch('/api/ai', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query })
+      body: JSON.stringify({ type: 'search', query })
     });
     const d = await r.json();
     if (d.error) throw new Error(d.error);
@@ -1206,7 +1206,7 @@ async function loadNews() {
   const container = document.getElementById('news-list');
   container.innerHTML = '<div style="color:var(--muted);font-size:11px"><span class="spinner-sm"></span> Fetching feeds…</div>';
   try {
-    const r = await fetch('/api/news');
+    const r = await fetch('/api/newswire');
     const d = await r.json();
     if (!d.articles || !d.articles.length) { container.innerHTML = '<div class="alert info"><span>◎</span><span>No articles found.</span></div>'; return; }
     container.innerHTML = d.articles.map(a => {
@@ -1498,10 +1498,10 @@ You MUST pick a direction. No hedging. No "it depends."
 Use real numbers from your search. Be bold. This is research only, not financial advice.`;
 
   try {
-    const r = await fetch('/api/search', {
+    const r = await fetch('/api/ai', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query })
+      body: JSON.stringify({ type: 'search', query })
     });
     const d = await r.json();
     if (d.error) throw new Error(d.error);
@@ -1838,7 +1838,7 @@ async function generateBriefing() {
   btn.disabled = true; spinner.style.display = 'inline-block';
   output.textContent = 'Generating intelligence brief... This takes 15-30 seconds as SIGINT queries multiple live sources.';
   try {
-    const r = await fetch('/api/briefing', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ macroData: window.macroSnapshot || null }) });
+    const r = await fetch('/api/ai', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ type: 'briefing', macroData: window.macroSnapshot || null }) });
     const d = await r.json();
     if (d.error) throw new Error(d.error);
     output.textContent = d.briefing;

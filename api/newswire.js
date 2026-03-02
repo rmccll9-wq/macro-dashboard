@@ -24,6 +24,7 @@ export default async function handler(req, res) {
     { name: 'The Hacker News', url: 'https://feeds.feedburner.com/TheHackersNews', cat: 'CYBER' },
     // Financial / Markets
     { name: 'Reuters Business', url: 'https://feeds.reuters.com/reuters/businessNews', cat: 'MARKET' },
+    { name: 'CNBC Economy', url: 'https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=20910258', cat: 'ECONOMIC' },
     { name: 'FT', url: 'https://www.ft.com/rss/home', cat: 'MARKET' },
     { name: 'Zero Hedge', url: 'https://feeds.feedburner.com/zerohedge/feed', cat: 'MARKET' },
     { name: 'Calculated Risk', url: 'https://www.calculatedriskblog.com/feeds/posts/default?alt=rss', cat: 'ECONOMIC' },

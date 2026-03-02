@@ -3,8 +3,18 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   if (req.method === 'OPTIONS') { res.status(204).end(); return; }
 
-  const { api_key } = req.query;
+  const { api_key, series_id, limit = 2, sort_order = 'desc' } = req.query;
   if (!api_key) { res.status(400).json({ error: 'Missing api_key' }); return; }
+
+  // Single series mode (replaces old fred.js)
+  if (series_id) {
+    try {
+      const r = await fetch('https://api.stlouisfed.org/fred/series/observations?series_id=' + series_id + '&api_key=' + api_key + '&file_type=json&sort_order=' + sort_order + '&limit=' + limit);
+      const d = await r.json();
+      res.status(200).json(d);
+    } catch(e) { res.status(500).json({ error: e.message }); }
+    return;
+  }
 
   // Extended FRED series for deeper macro view
   const series = {
